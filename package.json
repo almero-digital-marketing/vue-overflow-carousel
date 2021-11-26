@@ -1,6 +1,6 @@
 {
-  "name": "vue-scroll-carousel",
-  "version": "1.0.0",
+  "name": "vue-overflow-carousel",
+  "version": "1.0.3",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
@@ -10,12 +10,12 @@
   "files": [
     "dist"
   ],
-  "main": "./dist/vue-scrollcarousel.umd.js",
-  "module": "./dist/vue-scrollcarousel.es.js",
+  "main": "./dist/vue-overflowcarousel.umd.js",
+  "module": "./dist/vue-overflowcarousel.es.js",
   "exports": {
     ".": {
-      "import": "./dist/vue-scrollcarousel.es.js",
-      "require": "./dist/vue-scrollcarousel.umd.js"
+      "import": "./dist/vue-overflowcarousel.es.js",
+      "require": "./dist/vue-overflowcarousel.umd.js"
     }
   },
   "peerDependencies": {

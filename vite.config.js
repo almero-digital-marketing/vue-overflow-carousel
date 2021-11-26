@@ -8,8 +8,8 @@ export default defineConfig({
   build: {
     lib: {
       entry: path.resolve(__dirname, '/src/index.js'),
-      name: 'VueScrollCarousel',
-      fileName: (format) => `vue-scrollcarousel.${format}.js`
+      name: 'VueOverflowCarousel',
+      fileName: (format) => `vue-overflowcarousel.${format}.js`
     },
     rollupOptions: {
       // make sure to externalize deps that shouldn't be bundled

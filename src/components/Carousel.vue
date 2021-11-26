@@ -79,6 +79,7 @@ let moveTimeout, scrollTimeout
 
 function goTo(index, force) {
 	index = Math.min(Math.max(index, 0), total)
+	if (!component.value) return
 
 	const elements = component.value.querySelectorAll('.slide')
 	const element = elements[index]
@@ -105,7 +106,7 @@ function goTo(index, force) {
 			scrollTo: { 
 				x: element, 
 				autoKill: true, 
-				offsetX: center.value ? (component.value.clientWidth - element.clientWidth) / 2 : 0
+				offsetX: center.value ? (component.value.clientWidth - element?.clientWidth) / 2 : 0
 			}, 
 			duration: force ? 0 : duration.value
 		})
