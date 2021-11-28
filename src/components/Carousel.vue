@@ -49,7 +49,7 @@ const props = defineProps({
     },
 })
 
-const { captureScroll, active, center, enabled, duration } = toRefs(props)
+const { captureScroll, active, center, enabled, duration, gap } = toRefs(props)
 
 const component = ref(null)
 const track = ref(null)
@@ -106,7 +106,7 @@ function goTo(index, force) {
 			scrollTo: { 
 				x: element, 
 				autoKill: true, 
-				offsetX: center.value ? (component.value.clientWidth - element?.clientWidth) / 2 : 0
+				offsetX: center.value ? (component.value.clientWidth - element?.clientWidth) / 2 : gap.value
 			}, 
 			duration: force ? 0 : duration.value
 		})
@@ -151,7 +151,8 @@ function move(direction) {
 
 function wheel(e) {
 	mouse.value = true
-	if (!captureScroll.value || !enabled.value) return
+	console.log(e)
+	if (!captureScroll.value || !enabled.value || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
 
     if (moveTimeout) e.preventDefault()
     if (e.deltaY > 0 && component.value.scrollWidth - component.value.scrollLeft - 1 > component.value.offsetWidth) e.preventDefault()
@@ -207,6 +208,7 @@ function grab(value) {
 	}
 	.track {
 		display: flex;
+		gap: calc(v-bind(gap) * 1px);
 		&::before, 
 		&::after {
 			content: "";
@@ -229,7 +231,6 @@ function grab(value) {
 	}
 	::v-deep(.slide) {
 		scroll-snap-align: start;
-		padding-left: calc(v-bind(gap) * 1px);
 		.center & {
 			scroll-snap-align: center;
 		}
