@@ -151,7 +151,6 @@ function move(direction) {
 
 function wheel(e) {
 	mouse.value = true
-	console.log(e)
 	if (!captureScroll.value || !enabled.value || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
 
     if (moveTimeout) e.preventDefault()
