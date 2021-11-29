@@ -52,7 +52,7 @@
       <div class="item">15. Ex vel hinc latine interpretaris, te veritus blandit eum, fabellas perpetua inciderint te eos. Sed scaevola lobortis ne, everti definitionem ad pro. Ut copiosae explicari elaboraret usu, nam at copiosae accusata. Ea pri mucius insolens. Qui adhuc denique te, id sensibus mandamus quo.</div>
     </Slide>
   </Carousel>
-  <Carousel id="carousel-2" :captureScroll="true" :center="false" :gap="20" v-model:active="active">
+  <Carousel id="carousel-2" :captureScroll="true" :center="false" gap="20px" v-model:active="active">
     <Slide>
       <div class="item">1. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.</div>
     </Slide>

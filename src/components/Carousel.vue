@@ -36,8 +36,8 @@ const props = defineProps({
       default: true,
     },
 	gap: {
-      type: Number,
-      default: 0,
+      type: String,
+      default: '0px',
     },
 	enabled: {
       type: Boolean,
@@ -106,7 +106,7 @@ function goTo(index, force) {
 			scrollTo: { 
 				x: element, 
 				autoKill: true, 
-				offsetX: center.value ? (component.value.clientWidth - element?.clientWidth) / 2 : gap.value
+				offsetX: center.value ? (component.value.clientWidth - element?.clientWidth) / 2 : 0
 			}, 
 			duration: force ? 0 : duration.value
 		})
@@ -208,7 +208,9 @@ function grab(value) {
 	}
 	.track {
 		display: flex;
-		gap: calc(v-bind(gap) * 1px);
+		.center & {
+			gap: v-bind(gap);
+		}
 		&::before, 
 		&::after {
 			content: "";
@@ -231,16 +233,18 @@ function grab(value) {
 	}
 	::v-deep(.slide) {
 		scroll-snap-align: start;
+		padding-left: v-bind(gap);
 		.center & {
 			scroll-snap-align: center;
+			padding-left: unset;
 		}
 		&:first-child {
 			scroll-snap-align: start;
-			padding-left: calc(v-bind(gap) * 1px);
+			padding-left: v-bind(gap);
 		}
 		&:last-child {
 			scroll-snap-align: end;
-			padding-right: calc(v-bind(gap) * 1px);
+			padding-right: v-bind(gap);
 		}
 	}
 }
