@@ -205,11 +205,9 @@ function grab(value) {
 	&::-webkit-scrollbar {    
 		display: none;
 	}
+
 	.track {
 		display: flex;
-		.center & {
-			gap: v-bind(gap);
-		}
 		&::before, 
 		&::after {
 			content: "";
@@ -220,6 +218,7 @@ function grab(value) {
 			display: block;
 		}
 	}
+
 	&.mouse {
 		scroll-snap-type: none;
 		.track {
@@ -230,13 +229,10 @@ function grab(value) {
 
 		}
 	}
+
 	::v-deep(.slide) {
 		scroll-snap-align: start;
 		padding-left: v-bind(gap);
-		.center & {
-			scroll-snap-align: center;
-			padding-left: unset;
-		}
 		&:first-child {
 			scroll-snap-align: start;
 			padding-left: v-bind(gap);
@@ -244,6 +240,16 @@ function grab(value) {
 		&:last-child {
 			scroll-snap-align: end;
 			padding-right: v-bind(gap);
+		}
+	}
+
+	&.center {
+		.track {
+			gap: v-bind(gap);
+		}
+		::v-deep(.slide) {
+			scroll-snap-align: center;
+			padding-left: unset;
 		}
 	}
 }
