@@ -168,7 +168,7 @@ function scroll() {
 		if (current != active.value) {
 			emit('update:active', current)
 		}
-	}, 50)
+	}, 200)
 }
 
 watch(active, () => {
@@ -247,8 +247,10 @@ function grab(value) {
 		.track {
 			gap: v-bind(gap);
 		}
-		::v-deep(.slide) {
+		::v-deep(.slide:not(:first-child):not(:last-child)) {
 			scroll-snap-align: center;
+		}
+		::v-deep(.slide:not(:first-child)) {
 			padding-left: unset;
 		}
 	}
