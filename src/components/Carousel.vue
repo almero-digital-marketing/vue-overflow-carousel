@@ -76,7 +76,7 @@ function setTotal() {
 onMounted(setTotal)
 onUpdated(setTotal)
 
-let moveTimeout, scrollTimeout
+let moveTimeout
 
 function goTo(index, force) {
 	index = Math.min(Math.max(index, 0), total)
@@ -163,13 +163,13 @@ function wheel(e) {
 }
 
 function scroll() {
-	clearTimeout(scrollTimeout)
-	scrollTimeout = setTimeout(() => {
-		current.value = getActive()
-		if (current.value != active.value) {
-			emit('update:active', current.value)
-		}
-	}, 200)
+	current.value = getActive()
+	if (current.value != active.value) {
+		emit('update:active', current.value)
+	}
+	// clearTimeout(scrollTimeout)
+	// scrollTimeout = setTimeout(() => {
+	// }, 200)
 }
 
 watch(active, () => {
