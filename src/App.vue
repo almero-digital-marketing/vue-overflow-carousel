@@ -52,7 +52,7 @@
       <div class="item">15. Ex vel hinc latine interpretaris, te veritus blandit eum, fabellas perpetua inciderint te eos. Sed scaevola lobortis ne, everti definitionem ad pro. Ut copiosae explicari elaboraret usu, nam at copiosae accusata. Ea pri mucius insolens. Qui adhuc denique te, id sensibus mandamus quo.</div>
     </Slide>
   </Carousel>
-  <Carousel id="carousel-2" :captureScroll="true" :center="false" gap="20px" v-model:active="active">
+  <Carousel id="carousel-2" :captureScroll="true" :center="false" gap="20px" v-model:active="active" v-slot="carousel">
     <Slide>
       <div class="item">1. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.</div>
     </Slide>
@@ -60,7 +60,7 @@
       <div class="item">2. Qui et assum labore assueverit. Corpora suscipiantur sit et. Fugit oblique torquatos et vel. Cu eos hinc volumus, duis nusquam corrumpit id has. Te ius debet propriae splendide.</div>
     </Slide>
     <Slide>
-      <div class="item">3. At ius harum integre intellegam, ei ipsum nostro quaestio eos, legendos quaerendum mea ex. Melius recteque mediocritatem ut sea. An adhuc exerci deserunt usu. Eum persius sententiae reprehendunt id, id per error repudiandae. Id erroribus elaboraret liberavisse vim, in est graeco qualisque. In tibique probatus mea, pri eu aliquando reprimique eloquentiam.</div>
+      <div class="item">{{carousel.current == 2 ? 'Active' : '3'}}. At ius harum integre intellegam, ei ipsum nostro quaestio eos, legendos quaerendum mea ex. Melius recteque mediocritatem ut sea. An adhuc exerci deserunt usu. Eum persius sententiae reprehendunt id, id per error repudiandae. Id erroribus elaboraret liberavisse vim, in est graeco qualisque. In tibique probatus mea, pri eu aliquando reprimique eloquentiam.</div>
     </Slide>
     <Slide>
       <div class="item">4. Ea mei nobis nominati elaboraret, probo pericula per et. An qui oporteat rationibus theophrastus. Stet consul patrioque et cum. Iracundia reprimique ei pri. Id veri possim usu, vim nihil albucius definitiones in. Cu etiam delenit debitis mel.</div>

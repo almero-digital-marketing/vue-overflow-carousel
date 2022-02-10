@@ -1,6 +1,6 @@
 {
   "name": "vue-overflow-carousel",
-  "version": "1.0.10",
+  "version": "1.0.14",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
@@ -12,12 +12,6 @@
   ],
   "main": "./dist/vue-overflowcarousel.umd.js",
   "module": "./dist/vue-overflowcarousel.es.js",
-  "exports": {
-    ".": {
-      "import": "./dist/vue-overflowcarousel.es.js",
-      "require": "./dist/vue-overflowcarousel.umd.js"
-    }
-  },
   "peerDependencies": {
     "gsap": "^3.7.1",
     "less": "^4.1.2",

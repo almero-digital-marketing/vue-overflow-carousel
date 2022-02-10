@@ -9,7 +9,7 @@
 		@mouseleave="grab(false)"
 		@scroll.passive="scroll">
 		<div class="track" ref="track">
-			<slot></slot>
+			<slot :current="current"></slot>
 		</div>
 	</div>
 </template>
@@ -55,6 +55,7 @@ const component = ref(null)
 const track = ref(null)
 const grabbing = ref(false)
 const mouse = ref(!!!('ontouchstart' in window))
+const current = ref(active.value)
 
 let step = -1
 let total = 0
@@ -164,18 +165,18 @@ function wheel(e) {
 function scroll() {
 	clearTimeout(scrollTimeout)
 	scrollTimeout = setTimeout(() => {
-		let current = getActive()
-		if (current != active.value) {
-			emit('update:active', current)
+		current.value = getActive()
+		if (current.value != active.value) {
+			emit('update:active', current.value)
 		}
 	}, 200)
 }
 
 watch(active, () => {
-	let current = getActive()
+	current.value = getActive()
 	if (active.value < 0) return emit('update:active', 0)
 	if (active.value >= total) return emit('update:active', total - 1)
-	if (current != active.value) {
+	if (current.value != active.value) {
 		goTo(active.value)
 	}
 })
