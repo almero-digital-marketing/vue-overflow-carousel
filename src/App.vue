@@ -5,7 +5,7 @@
     &nbsp;
     <button @click="active++">Next</button>
   </div>
-  <Carousel id="carousel-1" v-model:active="active" :enabled="false" :duration=".4">
+  <Carousel id="carousel-1" :active="active" :enabled="false" :duration=".4">
     <Slide>
       <div class="item">1. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.</div>
     </Slide>

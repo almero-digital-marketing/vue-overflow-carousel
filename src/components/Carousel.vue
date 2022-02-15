@@ -3,13 +3,13 @@
 		:class="{ grabbing, mouse, center, enabled }" 
 		ref="component"
 		v-drag-scroll="mouse && enabled" 
+		@scroll.passive="scroll"
 		@mousewheel="wheel" 
 		@mousedown="grab(true)" 
 		@mouseup="grab(false)" 
-		@mouseleave="grab(false)"
-		@scroll.passive="scroll">
+		@mouseleave="grab(false)">
 		<div class="track" ref="track">
-			<slot :current="current"></slot>
+			<slot :scroller="component"></slot>
 		</div>
 	</div>
 </template>
@@ -19,8 +19,6 @@ import vDragScroll from "vue-dragscroll/src/directive-next"
 import { gsap } from 'gsap'
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
 gsap.registerPlugin(ScrollToPlugin)
-
-const emit = defineEmits(['update:active'])
 
 const props = defineProps({
     captureScroll: {
@@ -55,11 +53,11 @@ const component = ref(null)
 const track = ref(null)
 const grabbing = ref(false)
 const mouse = ref(!!!('ontouchstart' in window))
-const current = ref(active.value)
 
 let step = -1
 let total = 0
 let semaphor = true
+let scrollDirection = 0
 
 let semaphorTimeout
 function toggleSemaphor() {
@@ -119,20 +117,34 @@ function getActive() {
 	let initialStep = step
 	if (component.value.scrollLeft) {
 		const elements = component.value.querySelectorAll('.slide')
-		for (let index = 0; index < elements.length; index++) {
+
+		for (let index = 0; index < elements.length; index++) {	
 			const element = elements[index]
 			const elementStart = element.getBoundingClientRect().x - component.value.getBoundingClientRect().x
 			const elementEnd = elementStart + element.offsetWidth
-
-			if (center.value) {
-				if (viewportCenter > elementStart && viewportCenter < elementEnd) {
-					initialStep = index
-					break
+			if (scrollDirection > 0) {	
+				if (center.value) {
+					if (viewportCenter > elementStart && viewportCenter < elementEnd) {
+						initialStep = index
+						break
+					}
+				} else {
+					if (elementStart >= 0) {
+						initialStep = index
+						break
+					}
 				}
 			} else {
-				if (elementStart >= 0) {
-					initialStep = index
-					break
+				if (center.value) {
+					if (viewportCenter < elementEnd && viewportCenter > elementStart) {
+						initialStep = index
+						break
+					}
+				} else {
+					if (elementEnd >= 0) {
+						initialStep = index
+						break
+					}
 				}
 			}
 		}
@@ -150,33 +162,26 @@ function move(direction) {
     }
 }
 
+let wheelTimeout
 function wheel(e) {
-	mouse.value = true
 	if (!captureScroll.value || !enabled.value || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
+
+	mouse.value = true
 
     if (moveTimeout) e.preventDefault()
     if (e.deltaY > 0 && component.value.scrollWidth - component.value.scrollLeft - 1 > component.value.offsetWidth) e.preventDefault()
     if (e.deltaY < 0 && component.value.scrollLeft > 0) e.preventDefault()
-    if (!semaphor) return
-
-	move(Math.sign(e.deltaY))
-}
-
-function scroll() {
-	current.value = getActive()
-	if (current.value != active.value) {
-		emit('update:active', current.value)
-	}
-	// clearTimeout(scrollTimeout)
-	// scrollTimeout = setTimeout(() => {
-	// }, 200)
+	if (semaphor) move(Math.sign(e.deltaY))
+	
+	clearTimeout(wheelTimeout)
+	wheelTimeout = setTimeout(() => {
+		mouse.value = !!!('ontouchstart' in window)
+	}, 200)
 }
 
 watch(active, () => {
-	current.value = getActive()
-	if (active.value < 0) return emit('update:active', 0)
-	if (active.value >= total) return emit('update:active', total - 1)
-	if (current.value != active.value) {
+	const current = getActive()
+	if (current != active.value) {
 		goTo(active.value)
 	}
 })
@@ -184,7 +189,21 @@ watch(active, () => {
 function grab(value) {
 	if (enabled.value) {
 		grabbing.value = value
+		if (!value) {
+			const current = getActive()
+			goTo(current)
+		}
 	}
+}
+
+let lastScrollLeft = 0
+function scroll(e) {
+	if (component.value.scrollLeft > lastScrollLeft) {
+		scrollDirection = 1
+	} else {
+		scrollDirection = -1
+	}
+	lastScrollLeft = component.value.scrollLeft
 }
 
 </script>
