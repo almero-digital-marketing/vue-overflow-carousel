@@ -82,8 +82,6 @@ function goTo(index, force) {
 
 	const elements = component.value.querySelectorAll('.slide')
 	const element = elements[index]
-	const style = window.getComputedStyle(track.value)
-
 	if (index == 0) {
 		gsap.to(component.value, { 
 			scrollTo: {
@@ -187,7 +185,7 @@ watch(active, () => {
 })
 
 function grab(value) {
-	if (enabled.value) {
+	if (enabled.value && mouse.value) {
 		grabbing.value = value
 		if (!value) {
 			const current = getActive()
