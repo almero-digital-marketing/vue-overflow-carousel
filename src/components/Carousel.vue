@@ -132,7 +132,7 @@ function getActive() {
 						break
 					}
 				}
-			} else {
+			} else if (scrollDirection < 0) {
 				if (center.value) {
 					if (viewportCenter < elementEnd && viewportCenter > elementStart) {
 						initialStep = index
