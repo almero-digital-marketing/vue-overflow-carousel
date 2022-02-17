@@ -120,29 +120,37 @@ function getActive() {
 			const element = elements[index]
 			const elementStart = element.getBoundingClientRect().x - component.value.getBoundingClientRect().x
 			const elementEnd = elementStart + element.offsetWidth
-			if (scrollDirection > 0) {	
-				if (center.value) {
-					if (viewportCenter > elementStart && viewportCenter < elementEnd) {
-						initialStep = index
-						break
-					}
-				} else {
-					if (elementStart >= 0) {
-						initialStep = index
-						break
-					}
+			const elementInsideStart = elementStart + (elementEnd - elementStart) * .25
+			const elementInsideEnd = elementStart + (elementEnd - elementStart) * .75
+
+			if (center.value) {
+				const next = Math.max(0, Math.min(index + scrollDirection, elements.length - 1))
+				const nextElement = elements[next]
+				const nextElementStart = nextElement.getBoundingClientRect().x - component.value.getBoundingClientRect().x
+				const nextElementEnd = nextElementStart + nextElement.offsetWidth
+				const nextInsideStart = nextElementStart + (nextElementEnd - nextElementStart) * .25
+				const nextInsideEnd = nextElementStart + (nextElementEnd - nextElementStart) * .75
+
+				if (viewportCenter > elementInsideStart && viewportCenter < elementInsideEnd) {
+					initialStep = index
+					break
 				}
-			} else if (scrollDirection < 0) {
-				if (center.value) {
-					if (viewportCenter < elementEnd && viewportCenter > elementStart) {
-						initialStep = index
-						break
-					}
-				} else {
-					if (elementEnd >= 0) {
-						initialStep = index
-						break
-					}
+				if (scrollDirection > 0 && viewportCenter > elementInsideEnd && viewportCenter < nextInsideStart) {
+					initialStep = next
+					break
+				}
+				if (scrollDirection < 0 && viewportCenter < elementInsideStart && viewportCenter > nextInsideEnd) {
+					initialStep = next
+					break
+				}
+			} else {
+				if (scrollDirection > 0 && elementStart >= 0) {
+					initialStep = index
+					break
+				}
+				if (scrollDirection < 0 && elementEnd >= 0) {
+					initialStep = index
+					break
 				}
 			}
 		}
@@ -234,6 +242,18 @@ function scroll(e) {
 			flex-shrink: 0;
 			flex-grow: 0;
 			display: block;
+		}
+		.slide {
+			scroll-snap-align: start;
+			.center & {
+				scroll-snap-align: center;
+			}
+			&:first-child {
+				scroll-snap-align: start;
+			}
+			&:last-child {
+				scroll-snap-align: end;
+			}
 		}
 	}
 
