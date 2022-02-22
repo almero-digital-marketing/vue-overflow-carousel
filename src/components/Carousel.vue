@@ -154,6 +154,8 @@ function getActive() {
 				}
 			}
 		}
+	} else {
+		initialStep = 0
 	}
 	return initialStep
 }
@@ -197,6 +199,7 @@ function grab(value) {
 		grabbing.value = value
 		if (!value) {
 			const current = getActive()
+			console.log('FUCK', current)
 			goTo(current)
 		}
 	}
