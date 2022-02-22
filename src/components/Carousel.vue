@@ -199,7 +199,6 @@ function grab(value) {
 		grabbing.value = value
 		if (!value) {
 			const current = getActive()
-			console.log('FUCK', current)
 			goTo(current)
 		}
 	}
