@@ -1,13 +1,18 @@
 <template>
 	<div class="carousel" 
-		:class="{ grabbing, mouse, center, enabled }" 
+		:style="{
+			['--margin-first']: marginFirst + 'px',
+			['--margin-last']: marginLast + 'px',
+		}"
+		:class="{ grabbing, mouse, center, enabled, ['center-first']: centerFirst, ['center-last']: centerFirst }" 
 		ref="component"
 		v-drag-scroll="mouse && enabled" 
-		@scroll.passive="scroll"
+		@scroll="scroll"
 		@mousewheel="wheel" 
-		@mousedown="grab(true)" 
+		@mousedown="mousedown" 
 		@mouseup="grab(false)" 
-		@mouseleave="grab(false)">
+		@mouseleave="grab(false)"
+		@touchstart="touchstart">
 		<div class="track" ref="track">
 			<slot :scroller="component"></slot>
 		</div>
@@ -20,18 +25,27 @@ import { gsap } from 'gsap'
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
 gsap.registerPlugin(ScrollToPlugin)
 
+const emit = defineEmits(['update:modelValue'])
 const props = defineProps({
     captureScroll: {
       type: Boolean,
       default: true,
     },
-	active: {
+	modelValue: {
       type: Number,
       default: 0,
     },
     center: {
       type: Boolean,
-      default: true,
+      default: false,
+    },
+    centerFirst: {
+      type: Boolean,
+      default: false,
+    },
+    centerLast: {
+      type: Boolean,
+      default: false,
     },
 	gap: {
       type: String,
@@ -46,13 +60,19 @@ const props = defineProps({
       default: .6,
     },
 })
+defineExpose({ goTo })
 
-const { captureScroll, active, center, enabled, duration, gap } = toRefs(props)
+const componentId = Date.now()
+
+const { modelValue, captureScroll, center, enabled, duration, gap } = toRefs(props)
 
 const component = ref(null)
 const track = ref(null)
 const grabbing = ref(false)
 const mouse = ref(!!!('ontouchstart' in window))
+
+const marginFirst = ref(0)
+const marginLast = ref(0)
 
 let step = -1
 let total = 0
@@ -69,52 +89,75 @@ window.addEventListener('scroll', toggleSemaphor, { passive: true })
 onUnmounted(() => window.removeEventListener('scroll', toggleSemaphor))
 
 function setTotal() {
-    total = component.value.querySelectorAll('.slide').length
+	let slideElements = component.value.querySelectorAll('.slide')
+    total = slideElements.length
+	
+	if (props.center && props.centerFirst) {
+		marginFirst.value = (component.value.offsetWidth - slideElements[0].offsetWidth)/2
+	}
+
+	if (props.center && props.centerLast) {
+		marginLast.value = (component.value.offsetWidth - slideElements[slideElements.length - 1].offsetWidth)/2
+	}
 }
 onMounted(setTotal)
 onUpdated(setTotal)
 
 let moveTimeout
-
 function goTo(index, force) {
 	index = Math.min(Math.max(index, 0), total)
 	if (!component.value) return
 
 	const elements = component.value.querySelectorAll('.slide')
 	const element = elements[index]
-	if (index == 0) {
+	gsap.set(component.value, {
+		scrollSnapType: 'none'
+	})
+	if (!center.value) {
 		gsap.to(component.value, { 
 			scrollTo: {
 				autoKill: true,  
-				x: 0 
+				x: element,
+				ease: "power2"
 			}, 
-			duration: force ? 0 : duration.value 
-		})
-	} else if (index == elements.length - 1) {
-		gsap.to(component.value, { 
-			scrollTo: { 
-				autoKill: true, 
-				x: 'max' 
-			}, 
-			duration: force ? 0 : duration.value
+			duration: force ? 0 : duration.value ,
+			onComplete() {
+				gsap.set(component.value, {
+					scrollSnapType: 'revert'
+				})
+			}
 		})
 	} else {
-		gsap.to(component.value, { 
+		let offsetX = (component.value.clientWidth - element?.clientWidth) / 2
+		if (!props.centerFirst && index == 0) offsetX = 0
+		gsap.to(component.value, {
 			scrollTo: { 
 				x: element, 
 				autoKill: true, 
-				offsetX: center.value ? (component.value.clientWidth - element?.clientWidth) / 2 : 0
+				offsetX,
+				ease: "power2"
 			}, 
-			duration: force ? 0 : duration.value
+			duration: force ? 0 : duration.value,
+			onComplete() {
+				gsap.set(component.value, {
+					scrollSnapType: 'revert'
+				})
+			}
 		})
 	}
 }
 
 function getActive() {
+	if (!component.value) return
+
 	const viewportCenter = component.value.offsetWidth / 2
 	let initialStep = step
 	if (component.value.scrollLeft) {
 		const elements = component.value.querySelectorAll('.slide')
+		if (!elements.length) return
+
+		const firstElement = elements[0]
+		const firstElementStart = firstElement.getBoundingClientRect().x - component.value.getBoundingClientRect().x
 
 		for (let index = 0; index < elements.length; index++) {	
 			const element = elements[index]
@@ -131,7 +174,7 @@ function getActive() {
 				const nextInsideStart = nextElementStart + (nextElementEnd - nextElementStart) * .25
 				const nextInsideEnd = nextElementStart + (nextElementEnd - nextElementStart) * .75
 
-				if (viewportCenter > elementInsideStart && viewportCenter < elementInsideEnd) {
+				if (viewportCenter >= elementInsideStart && viewportCenter <= elementInsideEnd) {
 					initialStep = index
 					break
 				}
@@ -148,10 +191,18 @@ function getActive() {
 					initialStep = index
 					break
 				}
-				if (scrollDirection < 0 && elementEnd >= 0) {
+				if (scrollDirection < 0 && elementEnd > 0) {
 					initialStep = index
 					break
 				}
+			}
+		}
+
+		if (initialStep == -1) {
+			if (firstElementStart > 0) {
+				initialStep = 0
+			} else {
+				initialStep = elements.length - 1
 			}
 		}
 	} else {
@@ -172,6 +223,7 @@ function move(direction) {
 
 let wheelTimeout
 function wheel(e) {
+	window.scrollCarouselId = componentId
 	if (!captureScroll.value || !enabled.value || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
 
 	mouse.value = true
@@ -187,17 +239,28 @@ function wheel(e) {
 	}, 200)
 }
 
-watch(active, () => {
+function mousedown() {
+	window.scrollCarouselId = componentId
+	grab(true)
+}
+
+function touchstart() {
+	window.scrollCarouselId = componentId
+}
+
+watch(modelValue, () => {
 	const current = getActive()
-	if (current != active.value) {
-		goTo(active.value)
+	if (window.scrollCarouselId != componentId && current != modelValue.value) {
+		// console.log(modelValue.value)
+		goTo(modelValue.value)
 	}
 })
 
 function grab(value) {
+	if (grabbing.value == value) return
 	if (enabled.value && mouse.value) {
 		grabbing.value = value
-		if (!value) {
+		if (!grabbing.value) {
 			const current = getActive()
 			goTo(current)
 		}
@@ -206,12 +269,19 @@ function grab(value) {
 
 let lastScrollLeft = 0
 function scroll(e) {
+	if (!component.value) return
+
 	if (component.value.scrollLeft > lastScrollLeft) {
 		scrollDirection = 1
 	} else {
 		scrollDirection = -1
 	}
 	lastScrollLeft = component.value.scrollLeft
+
+	const current = getActive()
+	if (current != modelValue.value) {
+		emit('update:modelValue', current)
+	}
 }
 
 </script>
@@ -239,34 +309,21 @@ function scroll(e) {
 		&::before, 
 		&::after {
 			content: "";
-			width: 80px;
 			height: 1px;
 			flex-shrink: 0;
 			flex-grow: 0;
 			display: block;
-		}
-		.slide {
-			scroll-snap-align: start;
-			.center & {
-				scroll-snap-align: center;
-			}
-			&:first-child {
-				scroll-snap-align: start;
-			}
-			&:last-child {
-				scroll-snap-align: end;
-			}
+			width: 80px;
 		}
 	}
 
 	&.mouse {
 		scroll-snap-type: none;
 		.track {
-			&::before, 
+			&::before,
 			&::after {
 				display: none;
 			}
-
 		}
 	}
 
@@ -274,10 +331,12 @@ function scroll(e) {
 		scroll-snap-align: start;
 		padding-left: v-bind(gap);
 		&:first-child {
+			margin-left: var(--margin-first);
 			scroll-snap-align: start;
 			padding-left: v-bind(gap);
 		}
 		&:last-child {
+			margin-left: var(--margin-last);
 			scroll-snap-align: end;
 			padding-right: v-bind(gap);
 		}
@@ -292,6 +351,18 @@ function scroll(e) {
 		}
 		::v-deep(.slide:not(:first-child)) {
 			padding-left: unset;
+		}
+	}
+
+	&.center.center-first {
+		::v-deep(.slide:not(:last-child)) {
+			scroll-snap-align: center;
+		}		
+	}
+
+	&.center.center-last {
+		::v-deep(.slide:not(:first-child)) {
+			scroll-snap-align: center;
 		}
 	}
 }
