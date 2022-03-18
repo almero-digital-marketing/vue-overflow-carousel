@@ -7,12 +7,13 @@
 		:class="{ grabbing, mouse, center, enabled, ['center-first']: centerFirst, ['center-last']: centerFirst }" 
 		ref="component"
 		v-drag-scroll="mouse && enabled" 
-		@scroll="scroll"
+		@scroll.passive="scroll"
 		@mousewheel="wheel" 
 		@mousedown="mousedown" 
 		@mouseup="grab(false)" 
-		@mouseleave="grab(false)"
-		@touchstart="touchstart">
+		@mouseleave="mouseleave"
+		@touchstart="touchstart"
+		@touchend="touchend">
 		<div class="track" ref="track">
 			<slot :scroller="component"></slot>
 		</div>
@@ -244,8 +245,17 @@ function mousedown() {
 	grab(true)
 }
 
+function mouseleave() {
+	window.scrollCarouselId = 0
+	grab(false)
+}
+
 function touchstart() {
 	window.scrollCarouselId = componentId
+}
+
+function touchend() {
+	window.scrollCarouselId = 0
 }
 
 watch(modelValue, () => {
@@ -279,7 +289,7 @@ function scroll(e) {
 	lastScrollLeft = component.value.scrollLeft
 
 	const current = getActive()
-	if (current != modelValue.value) {
+	if (current != modelValue.value && window.scrollCarouselId == componentId) {
 		emit('update:modelValue', current)
 	}
 }
