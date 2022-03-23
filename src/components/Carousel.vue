@@ -6,7 +6,7 @@
 		}"
 		:class="{ grabbing, mouse, center, enabled, ['center-first']: centerFirst, ['center-last']: centerFirst }" 
 		ref="component"
-		v-drag-scroll="mouse && enabled" 
+		v-drag-scroll.x="mouse && enabled" 
 		@scroll.passive="scroll"
 		@mousewheel="wheel" 
 		@mousedown="mousedown" 
