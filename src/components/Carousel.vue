@@ -258,17 +258,18 @@ function touchend() {
 	window.scrollCarouselId = 0
 }
 
-onMounted(toggleActive)
-function toggleActive() {
+function toggleActive(active) {
 	const elements = component.value.querySelectorAll('.slide')
+	if (elements[active]?.classList.contains('active')) return
 	for (let index = 0; index < elements.length; index++) {
-		if (index != modelValue.value) {
+		if (index != active) {
 			elements[index].classList.remove('active')
 		} else {
 			elements[index].classList.add('active')
 		}
 	}
 }
+onMounted(() => toggleActive(props.modelValue))
 
 watch(modelValue, () => {
 	const current = getActive()
@@ -276,7 +277,6 @@ watch(modelValue, () => {
 		// console.log(modelValue.value)
 		goTo(modelValue.value)
 	}
-	toggleActive()
 })
 
 function grab(value) {
@@ -305,6 +305,7 @@ function scroll(e) {
 	if (current != modelValue.value && window.scrollCarouselId == componentId) {
 		emit('update:modelValue', current)
 	}
+	toggleActive(current)
 }
 
 </script>
