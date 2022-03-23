@@ -15,7 +15,7 @@
 		@touchstart="touchstart"
 		@touchend="touchend">
 		<div class="track" ref="track">
-			<slot :scroller="component"></slot>
+			<slot :scroller="component" :active="active"></slot>
 		</div>
 	</div>
 </template>
@@ -258,16 +258,18 @@ function touchend() {
 	window.scrollCarouselId = 0
 }
 
-function toggleActive(active) {
+const active = ref(props.modelValue)
+function toggleActive(current) {
 	const elements = component.value.querySelectorAll('.slide')
-	if (elements[active]?.classList.contains('active')) return
+	if (elements[current]?.classList.contains('active')) return
 	for (let index = 0; index < elements.length; index++) {
-		if (index != active) {
+		if (index != current) {
 			elements[index].classList.remove('active')
 		} else {
 			elements[index].classList.add('active')
 		}
 	}
+	active.value = current
 }
 onMounted(() => toggleActive(props.modelValue))
 
