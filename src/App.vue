@@ -151,6 +151,10 @@ body {
   height: 300px;
   width: 400px;
   position: relative;
+  transition: all 1s;
+}
+#carousel-2 .active .item {
+  background-color: bisque;
 }
 #carousel-2 .item::before {
   content: "";

@@ -119,8 +119,8 @@ function goTo(index, force) {
 			scrollTo: {
 				autoKill: true,  
 				x: element,
-				ease: "power2"
 			}, 
+			ease: "power2",
 			duration: force ? 0 : duration.value ,
 			onComplete() {
 				gsap.set(component.value, {
@@ -136,8 +136,8 @@ function goTo(index, force) {
 				x: element, 
 				autoKill: true, 
 				offsetX,
-				ease: "power2"
 			}, 
+			ease: "power2",
 			duration: force ? 0 : duration.value,
 			onComplete() {
 				gsap.set(component.value, {
@@ -160,7 +160,7 @@ function getActive() {
 		const firstElement = elements[0]
 		const firstElementStart = firstElement.getBoundingClientRect().x - component.value.getBoundingClientRect().x
 
-		for (let index = 0; index < elements.length; index++) {	
+		for (let index = 0; index < elements.length; index++) {
 			const element = elements[index]
 			const elementStart = element.getBoundingClientRect().x - component.value.getBoundingClientRect().x
 			const elementEnd = elementStart + element.offsetWidth
@@ -258,12 +258,25 @@ function touchend() {
 	window.scrollCarouselId = 0
 }
 
+onMounted(toggleActive)
+function toggleActive() {
+	const elements = component.value.querySelectorAll('.slide')
+	for (let index = 0; index < elements.length; index++) {
+		if (index != modelValue.value) {
+			elements[index].classList.remove('active')
+		} else {
+			elements[index].classList.add('active')
+		}
+	}
+}
+
 watch(modelValue, () => {
 	const current = getActive()
 	if (window.scrollCarouselId != componentId && current != modelValue.value) {
 		// console.log(modelValue.value)
 		goTo(modelValue.value)
 	}
+	toggleActive()
 })
 
 function grab(value) {
@@ -340,6 +353,7 @@ function scroll(e) {
 	::v-deep(.slide) {
 		scroll-snap-align: start;
 		padding-left: v-bind(gap);
+		flex-shrink: 0;
 		&:first-child {
 			margin-left: var(--margin-first);
 			scroll-snap-align: start;
