@@ -9,11 +9,11 @@
 		v-drag-scroll.x="mouse && enabled" 
 		@scroll.passive="scroll"
 		@mousewheel="wheel" 
-		@mousedown.stop="mousedown" 
+		@mousedown="mousedown" 
 		@mouseup="grab(false)" 
-		@mouseleave.stop="mouseleave"
-		@touchstart.stop="touchstart"
-		@touchend.stop="touchend">
+		@mouseleave="mouseleave"
+		@touchstart="touchstart"
+		@touchend="touchend">
 		<div class="track" ref="track">
 			<slot :scroller="component" :active="active"></slot>
 		</div>
@@ -232,7 +232,6 @@ function wheel(e) {
     if (moveTimeout) e.preventDefault()
     if (e.deltaY > 0 && component.value.scrollWidth - component.value.scrollLeft - 1 > component.value.offsetWidth) e.preventDefault()
     if (e.deltaY < 0 && component.value.scrollLeft > 0) {
-		e.stopPropagation()
 		e.preventDefault()
 	}
 	if (semaphor) move(Math.sign(e.deltaY))
