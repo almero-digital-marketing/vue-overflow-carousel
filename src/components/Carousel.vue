@@ -110,6 +110,8 @@ function goTo(index, force) {
 	if (!component.value) return
 
 	const elements = component.value.querySelectorAll('.slide')
+	if (!elements.length) return
+
 	const element = elements[index]
 	gsap.set(component.value, {
 		scrollSnapType: 'none'
@@ -263,6 +265,8 @@ function touchend() {
 const active = ref(props.modelValue)
 function toggleActive(current) {
 	const elements = component.value.querySelectorAll('.slide')
+	if (!elements.length) return
+	
 	if (elements[current]?.classList.contains('active')) return
 	for (let index = 0; index < elements.length; index++) {
 		if (index != current) {
@@ -333,7 +337,7 @@ function scroll(e) {
 	}
 
 	.track {
-		display: flex;
+		display: inline-flex;
 		&::before, 
 		&::after {
 			content: "";
@@ -365,9 +369,9 @@ function scroll(e) {
 			padding-left: v-bind(gap);
 		}
 		&:last-child {
-			margin-left: var(--margin-last);
+			margin-right: var(--margin-last);
 			scroll-snap-align: end;
-			padding-right: v-bind(gap);
+			padding-left: v-bind(gap);
 		}
 	}
 
