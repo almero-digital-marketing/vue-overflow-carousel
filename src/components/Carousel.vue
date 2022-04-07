@@ -12,8 +12,7 @@
 		@mousedown="mousedown" 
 		@mouseup="grab(false)" 
 		@mouseleave="mouseleave"
-		@touchstart="touchstart"
-		@touchend="touchend">
+		@touchstart="touchstart">
 		<div class="track" ref="track">
 			<slot :scroller="component" :active="active"></slot>
 		</div>
@@ -80,6 +79,9 @@ let total = 0
 let semaphor = true
 let scrollDirection = 0
 
+let lastScrollLeft = 0
+let scrolling = ref(null)
+
 let semaphorTimeout
 function toggleSemaphor() {
     semaphor = false
@@ -90,15 +92,16 @@ window.addEventListener('scroll', toggleSemaphor, { passive: true })
 onUnmounted(() => window.removeEventListener('scroll', toggleSemaphor))
 
 function setTotal() {
-	let slideElements = component.value.querySelectorAll('.slide')
-    total = slideElements.length
+	let elements = component.value.querySelectorAll('.slide')
+    total = elements.length
+	if (!elements.length) return
 	
 	if (props.center && props.centerFirst) {
-		marginFirst.value = (component.value.offsetWidth - slideElements[0].offsetWidth)/2
+		marginFirst.value = (component.value.offsetWidth - elements[0].offsetWidth)/2
 	}
 
 	if (props.center && props.centerLast) {
-		marginLast.value = (component.value.offsetWidth - slideElements[slideElements.length - 1].offsetWidth)/2
+		marginLast.value = (component.value.offsetWidth - elements[elements.length - 1].offsetWidth)/2
 	}
 }
 onMounted(setTotal)
@@ -250,7 +253,6 @@ function mousedown() {
 }
 
 function mouseleave() {
-	window.scrollCarouselId = 0
 	grab(false)
 }
 
@@ -258,15 +260,17 @@ function touchstart() {
 	window.scrollCarouselId = componentId
 }
 
-function touchend() {
-	window.scrollCarouselId = 0
-}
+watch(scrolling, () => {
+	if (!scrolling.value && window.scrollCarouselId == componentId) {
+		window.scrollCarouselId = 0
+	}
+})
 
 const active = ref(props.modelValue)
 function toggleActive(current) {
 	const elements = component.value.querySelectorAll('.slide')
 	if (!elements.length) return
-	
+
 	if (elements[current]?.classList.contains('active')) return
 	for (let index = 0; index < elements.length; index++) {
 		if (index != current) {
@@ -298,9 +302,13 @@ function grab(value) {
 	}
 }
 
-let lastScrollLeft = 0
 function scroll(e) {
 	if (!component.value) return
+
+	clearTimeout(scrolling.value)
+	scrolling.value = setTimeout(() => {
+		scrolling.value = null
+	}, 200)
 
 	if (component.value.scrollLeft > lastScrollLeft) {
 		scrollDirection = 1
