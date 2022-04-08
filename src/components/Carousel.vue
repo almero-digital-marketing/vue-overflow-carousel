@@ -19,8 +19,9 @@
 	</div>
 </template>
 <script setup>
-import { ref, onUpdated, onMounted, onUnmounted, toRefs, watch } from 'vue'
-import vDragScroll from "vue-dragscroll/src/directive-next"
+import { ref, onUpdated, onMounted, onUnmounted, toRefs, watch, onBeforeUnmount } from 'vue'
+import vDragScroll from 'vue-dragscroll/src/directive-next'
+import debounce from 'debounce'
 import { gsap } from 'gsap'
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
 gsap.registerPlugin(ScrollToPlugin)
@@ -91,21 +92,34 @@ function toggleSemaphor() {
 window.addEventListener('scroll', toggleSemaphor, { passive: true })
 onUnmounted(() => window.removeEventListener('scroll', toggleSemaphor))
 
-function setTotal() {
+function updateLayout() {
 	let elements = component.value.querySelectorAll('.slide')
     total = elements.length
-	if (!elements.length) return
+	if (!elements.length) {
+		marginFirst.value = 0
+		marginLast.value = 0
+		return
+	}
 	
 	if (props.center && props.centerFirst) {
-		marginFirst.value = (component.value.offsetWidth - elements[0].offsetWidth)/2
+		marginFirst.value = (component.value.offsetWidth - elements[0].offsetWidth) / 2
 	}
 
 	if (props.center && props.centerLast) {
-		marginLast.value = (component.value.offsetWidth - elements[elements.length - 1].offsetWidth)/2
+		marginLast.value = (component.value.offsetWidth - elements[elements.length - 1].offsetWidth) / 2
 	}
 }
-onMounted(setTotal)
-onUpdated(setTotal)
+
+let resizeObserver = new ResizeObserver(debounce(updateLayout, 100))
+onMounted(() => {
+	resizeObserver.observe(component.value)
+	resizeObserver.observe(track.value)
+	updateLayout()
+})
+onBeforeUnmount(() => {
+	resizeObserver.disconnect()
+})
+onUpdated(updateLayout)
 
 let moveTimeout
 function goTo(index, force) {

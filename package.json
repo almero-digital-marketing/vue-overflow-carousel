@@ -1,6 +1,6 @@
 {
   "name": "vue-overflow-carousel",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
@@ -23,6 +23,7 @@
     "vite": "^2.5.4"
   },
   "dependencies": {
+    "debounce": "^1.2.1",
     "vue-dragscroll": "^3.0.1"
   }
 }
