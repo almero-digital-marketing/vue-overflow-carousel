@@ -93,6 +93,7 @@ window.addEventListener('scroll', toggleSemaphor, { passive: true })
 onUnmounted(() => window.removeEventListener('scroll', toggleSemaphor))
 
 function updateLayout() {
+	if (!component.value) return
 	let elements = component.value.querySelectorAll('.slide')
     total = elements.length
 	if (!elements.length) {
@@ -243,6 +244,7 @@ function move(direction) {
 
 let wheelTimeout
 function wheel(e) {
+	if (!component.value) return
 	window.scrollCarouselId = componentId
 	if (!captureScroll.value || !enabled.value || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
 
@@ -282,6 +284,7 @@ watch(scrolling, () => {
 
 const active = ref(props.modelValue)
 function toggleActive(current) {
+	if (!component.value) return
 	const elements = component.value.querySelectorAll('.slide')
 	if (!elements.length) return
 
