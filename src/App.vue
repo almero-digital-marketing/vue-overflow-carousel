@@ -57,7 +57,7 @@
   <div class="markers">
     <Carousel id="carousel-2" :capture-scroll="true" :center="true" :center-first="true" :center-last="true" gap="20px" v-slot="carousel" v-model="active">
       <Slide>
-        <div class="item">0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.</div>
+        <div class="item">0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim.</div>
       </Slide>
       <Slide>
         <div class="item">1. Qui et assum labore assueverit. Corpora suscipiantur sit et. Fugit oblique torquatos et vel. Cu eos hinc volumus, duis nusquam corrumpit id has. Te ius debet propriae splendide.</div>
@@ -126,7 +126,7 @@ body {
 }
 #carousel-1 .item {
   border: 1px solid green;
-  height: 20vw;
+  min-height: 20vw;
   width: 20vw;
 }
 .markers {
@@ -148,7 +148,7 @@ body {
 }
 #carousel-2 .item {
   border: 1px solid green;
-  height: 300px;
+  min-height: 300px;
   width: 400px;
   position: relative;
   transition: all 1s;

@@ -352,6 +352,9 @@ function scroll(e) {
 
 	.track {
 		display: flex;
+		align-items: flex-start;
+  		align-content: flex-start;
+
 		&::before, 
 		&::after {
 			content: "";
