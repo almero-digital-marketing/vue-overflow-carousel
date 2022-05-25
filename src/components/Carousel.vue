@@ -14,12 +14,12 @@
 		@mouseleave="mouseleave"
 		@touchstart="touchstart">
 		<div class="track" ref="track">
-			<slot :scroller="component" :active="active"></slot>
+			<slot :scroller="component" :active="modelValue"></slot>
 		</div>
 	</div>
 </template>
 <script setup>
-import { ref, onUpdated, onMounted, onUnmounted, toRefs, watch, onBeforeUnmount } from 'vue'
+import { ref, onUpdated, onMounted, onUnmounted, toRefs, watch, onBeforeUnmount, provide } from 'vue'
 import vDragScroll from 'vue-dragscroll/src/directive-next'
 import debounce from 'debounce'
 import { gsap } from 'gsap'
@@ -74,6 +74,8 @@ const mouse = ref(!!!('ontouchstart' in window))
 
 const marginFirst = ref(0)
 const marginLast = ref(0)
+
+provide('active', modelValue)
 
 let step = -1
 let total = 0
@@ -282,29 +284,17 @@ watch(scrolling, () => {
 	}
 })
 
-const active = ref(props.modelValue)
-function toggleActive(current) {
-	if (!component.value) return
-	const elements = component.value.querySelectorAll('.slide')
-	if (!elements.length) return
-
-	if (elements[current]?.classList.contains('active')) return
-	for (let index = 0; index < elements.length; index++) {
-		if (index != current) {
-			elements[index].classList.remove('active')
-		} else {
-			elements[index].classList.add('active')
-		}
-	}
-	active.value = current
-}
-onMounted(() => toggleActive(props.modelValue))
-
 watch(modelValue, () => {
 	const current = getActive()
 	if (window.scrollCarouselId != componentId && current != modelValue.value) {
 		// console.log(modelValue.value)
-		goTo(modelValue.value)
+		if (modelValue.value < 0) {
+        	emit("update:modelValue", 0)
+    	} else if (modelValue.value > total - 1){
+			emit("update:modelValue", total - 1)
+		} else {
+			goTo(modelValue.value)
+		}
 	}
 })
 
@@ -338,7 +328,6 @@ function scroll(e) {
 	if (current != modelValue.value && window.scrollCarouselId == componentId) {
 		emit('update:modelValue', current)
 	}
-	toggleActive(current)
 }
 
 </script>
