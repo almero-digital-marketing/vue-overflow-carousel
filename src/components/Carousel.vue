@@ -351,7 +351,7 @@ function scroll(e) {
 	}
 
 	.track {
-		display: inline-flex;
+		display: flex;
 		&::before, 
 		&::after {
 			content: "";
