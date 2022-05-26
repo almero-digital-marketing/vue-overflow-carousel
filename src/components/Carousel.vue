@@ -7,10 +7,11 @@
 		:class="{ grabbing, mouse, center, enabled, ['center-first']: centerFirst, ['center-last']: centerFirst }" 
 		ref="component"
 		v-drag-scroll.x="mouse && enabled" 
-		@scroll.passive="scroll"
+		@scroll="scroll"
 		@mousewheel="wheel" 
 		@mousedown="mousedown" 
 		@mouseup="grab(false)" 
+		@mousemove="mousemove"
 		@mouseleave="mouseleave"
 		@touchstart="touchstart">
 		<div class="track" ref="track">
@@ -74,8 +75,9 @@ const mouse = ref(!!!('ontouchstart' in window))
 
 const marginFirst = ref(0)
 const marginLast = ref(0)
+const active = ref(0)
 
-provide('active', modelValue)
+provide('active', active)
 
 let step = -1
 let total = 0
@@ -83,7 +85,6 @@ let semaphor = true
 let scrollDirection = 0
 
 let lastScrollLeft = 0
-let scrolling = ref(null)
 
 let semaphorTimeout
 function toggleSemaphor() {
@@ -124,9 +125,9 @@ onBeforeUnmount(() => {
 })
 onUpdated(updateLayout)
 
-let moveTimeout
 function goTo(index, force) {
 	index = Math.min(Math.max(index, 0), total)
+	active.value = index
 	if (!component.value) return
 
 	const elements = component.value.querySelectorAll('.slide')
@@ -234,17 +235,18 @@ function getActive() {
 	return initialStep
 }
 
+let moving
 function move(direction) {
-    if (!moveTimeout) {
+    if (!moving) {
         step = Math.max(Math.min(getActive() + direction, total), 0)
-        moveTimeout = setTimeout(() => {
-            moveTimeout = null
+        moving = setTimeout(() => {
+            moving = null
         }, 100)
 		goTo(step)
     }
 }
 
-let wheelTimeout
+let spinning
 function wheel(e) {
 	if (!component.value) return
 	window.scrollCarouselId = componentId
@@ -252,21 +254,24 @@ function wheel(e) {
 
 	mouse.value = true
 
-    if (moveTimeout) e.preventDefault()
+    if (moving) e.preventDefault()
     if (e.deltaY > 0 && component.value.scrollWidth - component.value.scrollLeft - 1 > component.value.offsetWidth) e.preventDefault()
     if (e.deltaY < 0 && component.value.scrollLeft > 0) {
 		e.preventDefault()
 	}
 	if (semaphor) move(Math.sign(e.deltaY))
 	
-	clearTimeout(wheelTimeout)
-	wheelTimeout = setTimeout(() => {
+	clearTimeout(spinning)
+	spinning = setTimeout(() => {
 		mouse.value = !!!('ontouchstart' in window)
 	}, 200)
 }
 
-function mousedown() {
+function mousemove() {
 	window.scrollCarouselId = componentId
+}
+
+function mousedown() {
 	grab(true)
 }
 
@@ -278,25 +283,29 @@ function touchstart() {
 	window.scrollCarouselId = componentId
 }
 
-watch(scrolling, () => {
-	if (!scrolling.value && window.scrollCarouselId == componentId) {
-		window.scrollCarouselId = 0
-	}
-})
+function waitForScrollEnd () {
+    let lastChangedFrame = 0
+    let lastX = component.value.scrollX
+    let lastY = component.value.scrollY
 
-watch(modelValue, () => {
-	const current = getActive()
-	if (window.scrollCarouselId != componentId && current != modelValue.value) {
-		// console.log(modelValue.value)
-		if (modelValue.value < 0) {
-        	emit("update:modelValue", 0)
-    	} else if (modelValue.value > total - 1){
-			emit("update:modelValue", total - 1)
-		} else {
-			goTo(modelValue.value)
-		}
-	}
-})
+    return new Promise( resolve => {
+        function tick(frames) {
+            // We requestAnimationFrame either for 500 frames or until 20 frames with
+            // no change have been observed.
+            if (frames >= 500 || frames - lastChangedFrame > 20) {
+                resolve()
+            } else {
+                if (component.value.scrollX != lastX || component.value.scrollY != lastY) {
+	               	lastChangedFrame = frames
+                    lastX = component.value.scrollX
+                    lastY = component.value.scrollY
+                }
+                requestAnimationFrame(tick.bind(null, frames + 1))
+            }
+        }
+        tick(0)
+    })
+}
 
 function grab(value) {
 	if (grabbing.value == value) return
@@ -309,13 +318,9 @@ function grab(value) {
 	}
 }
 
+let scrolling = false
 function scroll(e) {
 	if (!component.value) return
-
-	clearTimeout(scrolling.value)
-	scrolling.value = setTimeout(() => {
-		scrolling.value = null
-	}, 200)
 
 	if (component.value.scrollLeft > lastScrollLeft) {
 		scrollDirection = 1
@@ -324,11 +329,31 @@ function scroll(e) {
 	}
 	lastScrollLeft = component.value.scrollLeft
 
-	const current = getActive()
-	if (current != modelValue.value && window.scrollCarouselId == componentId) {
-		emit('update:modelValue', current)
+	if (!scrolling) {
+		scrolling = waitForScrollEnd().then(() => {
+			const current = getActive()
+			if (window.scrollCarouselId == componentId) {
+				emit('update:modelValue', current)
+			}
+			if (window.scrollCarouselId == componentId) {
+				window.scrollCarouselId = 0
+			}
+			scrolling = false
+		})
 	}
 }
+
+watch(modelValue, () => {
+	if (window.scrollCarouselId != componentId || !scrolling) {
+		if (modelValue.value < 0) {
+        	emit("update:modelValue", 0)
+    	} else if (modelValue.value > total - 1){
+			emit("update:modelValue", total - 1)
+		} else {
+			goTo(modelValue.value)
+		}
+	}
+})
 
 </script>
 <style lang="less" scoped>
