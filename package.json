@@ -1,6 +1,6 @@
 {
   "name": "vue-overflow-carousel",
-  "version": "2.4.1",
+  "version": "3.0.8",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",

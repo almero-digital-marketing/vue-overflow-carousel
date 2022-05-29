@@ -7,15 +7,20 @@
 		:class="{ grabbing, mouse, center, enabled, ['center-first']: centerFirst, ['center-last']: centerFirst }" 
 		ref="component"
 		v-drag-scroll.x="mouse && enabled" 
-		@scroll="scroll"
-		@mousewheel="wheel" 
-		@mousedown="mousedown" 
-		@mouseup="grab(false)" 
-		@mousemove="mousemove"
-		@mouseleave="mouseleave"
-		@touchstart="touchstart">
+		@scroll="onScroll"
+		@mousewheel="onMouseWheel" 
+		@mousedown="onMouseDown" 
+		@mouseup="onMouseUp" 
+		@mousemove="onMouseMove"
+		@mouseleave="onMouseLeave"
+		@touchstart="onTouchStart">
+		<div class="pin" v-if="overlay">
+			<div class="overlay">
+				<slot name="overlay" :scroller="component" :active="active" :progress="progress"></slot>
+			</div>
+		</div>
 		<div class="track" ref="track">
-			<slot :scroller="component" :active="modelValue"></slot>
+			<slot :scroller="component" :active="active" :progress="progress"></slot>
 		</div>
 	</div>
 </template>
@@ -23,11 +28,12 @@
 import { ref, onUpdated, onMounted, onUnmounted, toRefs, watch, onBeforeUnmount, provide } from 'vue'
 import vDragScroll from 'vue-dragscroll/src/directive-next'
 import debounce from 'debounce'
+import { waitForScrollEnd } from '../lib/scrolling'
 import { gsap } from 'gsap'
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
 gsap.registerPlugin(ScrollToPlugin)
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'progress', 'layout'])
 const props = defineProps({
     captureScroll: {
       type: Boolean,
@@ -35,7 +41,7 @@ const props = defineProps({
     },
 	modelValue: {
       type: Number,
-      default: 0,
+      default: null,
     },
     center: {
       type: Boolean,
@@ -61,6 +67,10 @@ const props = defineProps({
       type: Number,
       default: .6,
     },
+	overlay: {
+      type: Boolean,
+      default: false,
+    },
 })
 defineExpose({ goTo })
 
@@ -72,10 +82,13 @@ const component = ref(null)
 const track = ref(null)
 const grabbing = ref(false)
 const mouse = ref(!!!('ontouchstart' in window))
+const width = ref(0)
+const height = ref(0)
 
 const marginFirst = ref(0)
 const marginLast = ref(0)
 const active = ref(0)
+const progress = ref(0)
 
 provide('active', active)
 
@@ -95,8 +108,21 @@ function toggleSemaphor() {
 window.addEventListener('scroll', toggleSemaphor, { passive: true })
 onUnmounted(() => window.removeEventListener('scroll', toggleSemaphor))
 
+function toggleCarousel({ target }) {
+	if (!target.classList.contains('craousel') && !target.closest('.carousel')) {
+		window.scrollCarouselId = 0
+	}
+}
+
+window.addEventListener('touchstart', toggleCarousel)
+onUnmounted(() => window.removeEventListener('touchstart', toggleCarousel))
+
 function updateLayout() {
 	if (!component.value) return
+
+	width.value = component.value.offsetWidth
+	height.value = component.value.offsetHeight
+
 	let elements = component.value.querySelectorAll('.slide')
     total = elements.length
 	if (!elements.length) {
@@ -106,12 +132,13 @@ function updateLayout() {
 	}
 	
 	if (props.center && props.centerFirst) {
-		marginFirst.value = (component.value.offsetWidth - elements[0].offsetWidth) / 2
+		marginFirst.value = (width.value - elements[0].offsetWidth) / 2
 	}
 
 	if (props.center && props.centerLast) {
-		marginLast.value = (component.value.offsetWidth - elements[elements.length - 1].offsetWidth) / 2
+		marginLast.value = (width.value - elements[elements.length - 1].offsetWidth) / 2
 	}
+	emit('layout')
 }
 
 let resizeObserver = new ResizeObserver(debounce(updateLayout, 100))
@@ -123,20 +150,26 @@ onMounted(() => {
 onBeforeUnmount(() => {
 	resizeObserver.disconnect()
 })
-onUpdated(updateLayout)
 
+let lastIndex
 function goTo(index, force) {
-	index = Math.min(Math.max(index, 0), total)
-	active.value = index
 	if (!component.value) return
 
-	const elements = component.value.querySelectorAll('.slide')
+	const elements = component.value.getElementsByClassName('slide')
 	if (!elements.length) return
 
+	index = Math.min(Math.max(index, 0), total - 1)
 	const element = elements[index]
-	gsap.set(component.value, {
-		scrollSnapType: 'none'
-	})
+	if (lastIndex == index) return
+	lastIndex = index
+
+	const syncModel = () => {
+		if (modelValue.value != null && modelValue.value != lastIndex) {
+			goTo(modelValue.value)
+		}
+		component.value.style['scroll-snap-type'] = 'x mandatory'
+	}
+
 	if (!center.value) {
 		gsap.to(component.value, { 
 			scrollTo: {
@@ -145,11 +178,7 @@ function goTo(index, force) {
 			}, 
 			ease: "power2",
 			duration: force ? 0 : duration.value ,
-			onComplete() {
-				gsap.set(component.value, {
-					scrollSnapType: 'revert'
-				})
-			}
+			onComplete: syncModel
 		})
 	} else {
 		let offsetX = (component.value.clientWidth - element?.clientWidth) / 2
@@ -162,11 +191,7 @@ function goTo(index, force) {
 			}, 
 			ease: "power2",
 			duration: force ? 0 : duration.value,
-			onComplete() {
-				gsap.set(component.value, {
-					scrollSnapType: 'revert'
-				})
-			}
+			onComplete: syncModel
 		})
 	}
 }
@@ -174,7 +199,7 @@ function goTo(index, force) {
 function getActive() {
 	if (!component.value) return
 
-	const viewportCenter = component.value.offsetWidth / 2
+	const viewportCenter = width.value / 2
 	let initialStep = step
 	if (component.value.scrollLeft) {
 		const elements = component.value.querySelectorAll('.slide')
@@ -247,7 +272,7 @@ function move(direction) {
 }
 
 let spinning
-function wheel(e) {
+function onMouseWheel(e) {
 	if (!component.value) return
 	window.scrollCarouselId = componentId
 	if (!captureScroll.value || !enabled.value || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
@@ -255,7 +280,7 @@ function wheel(e) {
 	mouse.value = true
 
     if (moving) e.preventDefault()
-    if (e.deltaY > 0 && component.value.scrollWidth - component.value.scrollLeft - 1 > component.value.offsetWidth) e.preventDefault()
+    if (e.deltaY > 0 && component.value.scrollWidth - component.value.scrollLeft - 1 > width.value) e.preventDefault()
     if (e.deltaY < 0 && component.value.scrollLeft > 0) {
 		e.preventDefault()
 	}
@@ -267,44 +292,26 @@ function wheel(e) {
 	}, 200)
 }
 
-function mousemove() {
+function onMouseMove() {
 	window.scrollCarouselId = componentId
 }
 
-function mousedown() {
+function onMouseDown() {
+	component.value.style['scroll-snap-type'] = 'none'
 	grab(true)
 }
 
-function mouseleave() {
+function onMouseUp() {
+	component.value.style['scroll-snap-type'] = 'x mandatory'
 	grab(false)
 }
 
-function touchstart() {
-	window.scrollCarouselId = componentId
+function onMouseLeave() {
+	grab(false)
 }
 
-function waitForScrollEnd () {
-    let lastChangedFrame = 0
-    let lastX = component.value.scrollX
-    let lastY = component.value.scrollY
-
-    return new Promise( resolve => {
-        function tick(frames) {
-            // We requestAnimationFrame either for 500 frames or until 20 frames with
-            // no change have been observed.
-            if (frames >= 500 || frames - lastChangedFrame > 20) {
-                resolve()
-            } else {
-                if (component.value.scrollX != lastX || component.value.scrollY != lastY) {
-	               	lastChangedFrame = frames
-                    lastX = component.value.scrollX
-                    lastY = component.value.scrollY
-                }
-                requestAnimationFrame(tick.bind(null, frames + 1))
-            }
-        }
-        tick(0)
-    })
+function onTouchStart() {
+	window.scrollCarouselId = componentId
 }
 
 function grab(value) {
@@ -318,8 +325,13 @@ function grab(value) {
 	}
 }
 
+function calcProgress() {
+	progress.value = component.value.scrollLeft / (component.value.scrollWidth - width.value)
+	emit('progress', progress.value)
+}
+
 let scrolling = false
-function scroll(e) {
+function onScroll() {
 	if (!component.value) return
 
 	if (component.value.scrollLeft > lastScrollLeft) {
@@ -329,14 +341,13 @@ function scroll(e) {
 	}
 	lastScrollLeft = component.value.scrollLeft
 
+	calcProgress()
+
 	if (!scrolling) {
-		scrolling = waitForScrollEnd().then(() => {
-			const current = getActive()
+		scrolling = waitForScrollEnd(component.value).then(() => {
+			active.value = getActive()
 			if (window.scrollCarouselId == componentId) {
-				emit('update:modelValue', current)
-			}
-			if (window.scrollCarouselId == componentId) {
-				window.scrollCarouselId = 0
+				emit('update:modelValue', active.value)
 			}
 			scrolling = false
 		})
@@ -350,8 +361,10 @@ watch(modelValue, () => {
     	} else if (modelValue.value > total - 1){
 			emit("update:modelValue", total - 1)
 		} else {
-			goTo(modelValue.value)
-		}
+			if (modelValue.value != getActive()) {
+				goTo(modelValue.value)
+			}
+		} 
 	}
 })
 
@@ -362,6 +375,7 @@ watch(modelValue, () => {
 	scroll-snap-type: x mandatory;
 	cursor: grab;
 	pointer-events: none;
+	display: flex;
 
 	&.enabled {
 		pointer-events: unset;
@@ -376,9 +390,7 @@ watch(modelValue, () => {
 	}
 
 	.track {
-		display: flex;
-		align-items: flex-start;
-  		align-content: flex-start;
+		display: inline-flex;
 
 		&::before, 
 		&::after {
@@ -392,7 +404,6 @@ watch(modelValue, () => {
 	}
 
 	&.mouse {
-		scroll-snap-type: none;
 		.track {
 			&::before,
 			&::after {
@@ -439,6 +450,22 @@ watch(modelValue, () => {
 		::v-deep(.slide:not(:first-child)) {
 			scroll-snap-align: center;
 		}
+	}
+	.pin {
+		position: sticky;
+		left: 0;
+		height: 0;
+		width: 0;
+		top: 0;
+		z-index: 2;
+	}
+	.overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: calc(1px * v-bind(width));
+		height: calc(1px * v-bind(height));
+		pointer-events: none;
 	}
 }
 </style>

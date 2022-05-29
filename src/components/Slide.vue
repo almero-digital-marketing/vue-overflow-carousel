@@ -11,7 +11,7 @@ const component = ref(null)
 const active = ref(false)
 
 function toggleActive() {
-    const index = [...component.value.parentNode.children].indexOf(component.value)
+    const index = [...component.value.parentNode.getElementsByClassName('slide')].indexOf(component.value)
     active.value = index == activeIndex.value
 }
 
