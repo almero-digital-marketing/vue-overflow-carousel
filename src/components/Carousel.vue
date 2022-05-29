@@ -302,7 +302,6 @@ function onMouseDown() {
 }
 
 function onMouseUp() {
-	component.value.style['scroll-snap-type'] = 'x mandatory'
 	grab(false)
 }
 
