@@ -108,9 +108,13 @@ function toggleSemaphor() {
 window.addEventListener('scroll', toggleSemaphor, { passive: true })
 onUnmounted(() => window.removeEventListener('scroll', toggleSemaphor))
 
-function toggleCarousel({ target }) {
-	if (!target.classList.contains('craousel') && !target.closest('.carousel')) {
-		window.scrollCarouselId = 0
+function toggleCarousel({ target } = {}) {
+	if (target) {
+		if (window.scrollCarouselId != 0 && !target.classList.contains('craousel') && !target.closest('.carousel')) {
+			window.scrollCarouselId = 0
+		}
+	} else {
+		window.scrollCarouselId = componentId
 	}
 }
 
@@ -142,6 +146,8 @@ function updateLayout() {
 		marginLast.value = (width.value - elements[elements.length - 1].offsetWidth) / 2
 	}
 	emit('layout')
+
+	calcProgress()
 }
 
 let resizeObserver = new ResizeObserver(debounce(updateLayout, 100))
@@ -154,7 +160,15 @@ onBeforeUnmount(() => {
 	resizeObserver.disconnect()
 })
 
-let lastIndex
+function toggleSnap(snap) {
+	if (snap) {
+		component.value.style['scroll-snap-type'] = 'x mandatory'
+	} else {
+		component.value.style['scroll-snap-type'] = 'none'
+	}
+}
+
+let goToIndex
 function goTo(index, force) {
 	if (!component.value) return
 
@@ -163,11 +177,11 @@ function goTo(index, force) {
 
 	index = Math.min(Math.max(index, 0), total - 1)
 	const element = elements[index]
-	if (lastIndex == index) return
-	lastIndex = index
+	if (goToIndex == index) return
+	goToIndex = index
 
 	const syncModel = () => {
-		if (modelValue.value != null && modelValue.value != lastIndex) {
+		if (modelValue.value != null && modelValue.value != goToIndex) {
 			goTo(modelValue.value)
 		}
 	}
@@ -295,32 +309,33 @@ function onMouseWheel(e) {
 }
 
 function onMouseMove() {
-	window.scrollCarouselId = componentId
+	toggleCarousel()
 }
 
 function onMouseDown() {
-	component.value.style['scroll-snap-type'] = 'none'
-	grab(true)
+	toggleSnap(false)
+	toggleGrab(true)
 }
 
 function onMouseUp() {
-	grab(false)
+	toggleGrab(false)
 }
 
 function onMouseLeave() {
-	grab(false)
+	toggleGrab(false)
 }
 
 function onTouchStart() {
-	component.value.style['scroll-snap-type'] = 'x mandatory'
-	window.scrollCarouselId = componentId
+	toggleSnap(true)
+	toggleCarousel()
 }
 
-function grab(value) {
+function toggleGrab(value) {
 	if (grabbing.value == value) return
 	if (enabled.value && mouse.value) {
 		grabbing.value = value
 		if (!grabbing.value) {
+			goToIndex = -1
 			const current = getActive()
 			goTo(current)
 		}
@@ -405,14 +420,14 @@ watch(modelValue, () => {
 		}
 	}
 
-	&.mouse {
-		.track {
-			&::before,
-			&::after {
-				display: none;
-			}
-		}
-	}
+	// &.mouse {
+	// 	.track {
+	// 		&::before,
+	// 		&::after {
+	// 			display: none;
+	// 		}
+	// 	}
+	// }
 
 	::v-deep(.slide) {
 		scroll-snap-align: start;
