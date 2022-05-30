@@ -117,6 +117,9 @@ function toggleCarousel({ target }) {
 window.addEventListener('touchstart', toggleCarousel)
 onUnmounted(() => window.removeEventListener('touchstart', toggleCarousel))
 
+window.addEventListener('mousedown', toggleCarousel)
+onUnmounted(() => window.removeEventListener('mousedown', toggleCarousel))
+
 function updateLayout() {
 	if (!component.value) return
 
@@ -167,7 +170,6 @@ function goTo(index, force) {
 		if (modelValue.value != null && modelValue.value != lastIndex) {
 			goTo(modelValue.value)
 		}
-		component.value.style['scroll-snap-type'] = 'x mandatory'
 	}
 
 	if (!center.value) {
@@ -310,6 +312,7 @@ function onMouseLeave() {
 }
 
 function onTouchStart() {
+	component.value.style['scroll-snap-type'] = 'x mandatory'
 	window.scrollCarouselId = componentId
 }
 
@@ -356,7 +359,7 @@ function onScroll() {
 watch(modelValue, () => {
 	if (window.scrollCarouselId != componentId || !scrolling) {
 		if (modelValue.value < 0) {
-        	emit("update:modelValue", 0)
+			emit("update:modelValue", 0)
     	} else if (modelValue.value > total - 1){
 			emit("update:modelValue", total - 1)
 		} else {
