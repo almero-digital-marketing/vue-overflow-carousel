@@ -296,10 +296,10 @@ function onMouseWheel(e) {
 	mouse.value = true
 
     if (moving) e.preventDefault()
-    if (e.deltaY > 0 && component.value.scrollWidth - component.value.scrollLeft - 1 > width.value) e.preventDefault()
-    if (e.deltaY < 0 && component.value.scrollLeft > 0) {
+    if (e.deltaY > 0 && component.value.scrollWidth - component.value.scrollLeft - width.value > 100 ||
+		e.deltaY < 0 && component.value.scrollLeft > 100) {
 		e.preventDefault()
-	}
+	} 
 	if (semaphor) move(Math.sign(e.deltaY))
 	
 	clearTimeout(spinning)
@@ -416,6 +416,11 @@ watch(modelValue, () => {
 			flex-shrink: 0;
 			flex-grow: 0;
 			display: block;
+		}
+		&::before {
+			width: calc(100px - v-bind(gap));
+		}
+		&::after {
 			width: 80px;
 		}
 	}
