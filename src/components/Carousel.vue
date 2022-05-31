@@ -14,7 +14,7 @@
 		@mousemove="onMouseMove"
 		@mouseleave="onMouseLeave"
 		@touchstart="onTouchStart">
-		<div class="pin" v-if="overlay">
+		<div class="navigation" v-if="overlay">
 			<div class="overlay">
 				<slot name="overlay" :scroller="component" :active="active" :progress="progress"></slot>
 			</div>
@@ -25,7 +25,7 @@
 	</div>
 </template>
 <script setup>
-import { ref, onUpdated, onMounted, onUnmounted, toRefs, watch, onBeforeUnmount, provide } from 'vue'
+import { ref, onMounted, onUnmounted, toRefs, watch, onBeforeUnmount, provide } from 'vue'
 import vDragScroll from 'vue-dragscroll/src/directive-next'
 import debounce from 'debounce'
 import { waitForScrollEnd } from '../lib/scrolling'
@@ -108,7 +108,7 @@ function toggleSemaphor() {
 window.addEventListener('scroll', toggleSemaphor, { passive: true })
 onUnmounted(() => window.removeEventListener('scroll', toggleSemaphor))
 
-function toggleCarousel({ target } = {}) {
+function toggleFocus({ target } = {}) {
 	if (target) {
 		if (window.scrollCarouselId != 0 && !target.classList.contains('craousel') && !target.closest('.carousel')) {
 			window.scrollCarouselId = 0
@@ -118,11 +118,11 @@ function toggleCarousel({ target } = {}) {
 	}
 }
 
-window.addEventListener('touchstart', toggleCarousel)
-onUnmounted(() => window.removeEventListener('touchstart', toggleCarousel))
+window.addEventListener('touchstart', toggleFocus)
+onUnmounted(() => window.removeEventListener('touchstart', toggleFocus))
 
-window.addEventListener('mousedown', toggleCarousel)
-onUnmounted(() => window.removeEventListener('mousedown', toggleCarousel))
+window.addEventListener('mousedown', toggleFocus)
+onUnmounted(() => window.removeEventListener('mousedown', toggleFocus))
 
 function updateLayout() {
 	if (!component.value) return
@@ -309,7 +309,7 @@ function onMouseWheel(e) {
 }
 
 function onMouseMove() {
-	toggleCarousel()
+	toggleFocus()
 }
 
 function onMouseDown() {
@@ -327,7 +327,7 @@ function onMouseLeave() {
 
 function onTouchStart() {
 	toggleSnap(true)
-	toggleCarousel()
+	toggleFocus()
 }
 
 function toggleGrab(value) {
@@ -425,15 +425,6 @@ watch(modelValue, () => {
 		}
 	}
 
-	// &.mouse {
-	// 	.track {
-	// 		&::before,
-	// 		&::after {
-	// 			display: none;
-	// 		}
-	// 	}
-	// }
-
 	::v-deep(.slide) {
 		scroll-snap-align: start;
 		padding-left: v-bind(gap);
@@ -473,21 +464,21 @@ watch(modelValue, () => {
 			scroll-snap-align: center;
 		}
 	}
-	.pin {
+	.navigation {
 		position: sticky;
 		left: 0;
 		height: 0;
 		width: 0;
 		top: 0;
 		z-index: 2;
-	}
-	.overlay {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: calc(1px * v-bind(width));
-		height: calc(1px * v-bind(height));
-		pointer-events: none;
+		.overlay {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: calc(1px * v-bind(width));
+			height: calc(1px * v-bind(height));
+			pointer-events: none;
+		}
 	}
 }
 </style>
