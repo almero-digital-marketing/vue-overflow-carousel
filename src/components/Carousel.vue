@@ -4,9 +4,9 @@
 			['--margin-first']: marginFirst + 'px',
 			['--margin-last']: marginLast + 'px',
 		}"
-		:class="{ grabbing, mouse, center, enabled, ['center-first']: centerFirst, ['center-last']: centerFirst }" 
+		:class="{ grabbing, mouse, center, ['center-first']: centerFirst, ['center-last']: centerFirst }" 
 		ref="component"
-		v-drag-scroll.x="mouse && enabled" 
+		v-drag-scroll.x="mouse" 
 		@scroll="onScroll"
 		@mousewheel="onMouseWheel" 
 		@mousedown="onMouseDown" 
@@ -25,7 +25,7 @@
 	</div>
 </template>
 <script setup>
-import { ref, onMounted, onUnmounted, toRefs, watch, onBeforeUnmount, provide } from 'vue'
+import { ref, onMounted, onUnmounted, toRefs, watch, onBeforeUnmount, provide, computed } from 'vue'
 import vDragScroll from 'vue-dragscroll/src/directive-next'
 import debounce from 'debounce'
 import { waitForScrollEnd } from '../lib/scrolling'
@@ -57,11 +57,14 @@ const props = defineProps({
     },
 	gap: {
       type: String,
+    },
+	slideGap: {
+      type: String,
       default: '0px',
     },
-	enabled: {
-      type: Boolean,
-      default: true,
+	trackGap: {
+      type: String,
+      default: '0px',
     },
 	duration: {
       type: Number,
@@ -76,7 +79,7 @@ defineExpose({ goTo })
 
 const componentId = Date.now()
 
-const { modelValue, captureScroll, center, enabled, duration, gap } = toRefs(props)
+const { modelValue, captureScroll, center, duration, gap, slideGap, trackGap } = toRefs(props)
 
 const component = ref(null)
 const track = ref(null)
@@ -89,6 +92,9 @@ const marginFirst = ref(0)
 const marginLast = ref(0)
 const active = ref(0)
 const progress = ref(0)
+
+const _slideGap = computed(() => gap.value || slideGap.value)
+const _trackGap = computed(() => gap.value || trackGap.value)
 
 provide('active', active)
 
@@ -291,7 +297,7 @@ let spinning
 function onMouseWheel(e) {
 	if (!component.value) return
 	window.scrollCarouselId = componentId
-	if (!captureScroll.value || !enabled.value || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
+	if (!captureScroll.value || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
 
 	mouse.value = true
 
@@ -299,11 +305,12 @@ function onMouseWheel(e) {
     if (e.deltaY > 0 && component.value.scrollWidth - component.value.scrollLeft - width.value > 100 ||
 		e.deltaY < 0 && component.value.scrollLeft > 100) {
 		e.preventDefault()
-	} 
+	}
 	if (semaphor) move(Math.sign(e.deltaY))
 	
 	clearTimeout(spinning)
 	spinning = setTimeout(() => {
+		enforceBounds()
 		mouse.value = !!!('ontouchstart' in window)
 	}, 200)
 }
@@ -332,19 +339,45 @@ function onTouchStart() {
 
 function toggleGrab(value) {
 	if (grabbing.value == value) return
-	if (enabled.value && mouse.value) {
+	if (mouse.value) {
 		grabbing.value = value
 		if (!grabbing.value) {
 			goToIndex = -1
 			const current = getActive()
 			goTo(current)
+			enforceBounds()
 		}
 	}
 }
 
 function calcProgress() {
-	progress.value = component.value.scrollLeft / (component.value.scrollWidth - width.value)
+	progress.value = (component.value.scrollLeft - 100) / (component.value.scrollWidth - width.value - 200)
 	emit('progress', progress.value)
+}
+
+function enforceBounds() {
+	if (!mouse.value) return
+	if (progress.value > 1) {
+		gsap.to(component.value, {
+			scrollTo: { 
+				x: 'max', 
+				autoKill: true, 
+				offsetX: 100,
+			}, 
+			ease: "power2",
+			duration: .2,
+		})
+	} 
+	else if (progress.value < 0) {
+		gsap.to(component.value, {
+			scrollTo: { 
+				x: 100, 
+				autoKill: true, 
+			}, 
+			ease: "power2",
+			duration: .2,
+		})
+	} 
 }
 
 let scrolling = false
@@ -391,12 +424,7 @@ watch(modelValue, () => {
 	overflow-x: scroll;
 	scroll-snap-type: x mandatory;
 	cursor: grab;
-	pointer-events: none;
 	display: flex;
-
-	&.enabled {
-		pointer-events: unset;
-	}
 
 	&.grabbing {
 		cursor: grabbing;
@@ -408,7 +436,8 @@ watch(modelValue, () => {
 
 	.track {
 		display: inline-flex;
-
+		gap: calc(v-bind(_slideGap) - v-bind(_trackGap));
+		
 		&::before, 
 		&::after {
 			content: "";
@@ -416,40 +445,51 @@ watch(modelValue, () => {
 			flex-shrink: 0;
 			flex-grow: 0;
 			display: block;
+			z-index: 10;
+			height: 100%;
+			width: 100px;
 		}
-		&::before {
-			width: calc(100px - v-bind(gap));
-		}
+
 		&::after {
-			width: 80px;
+			margin-left: calc(-1 * v-bind(_slideGap) + v-bind(_trackGap));
 		}
 	}
 
 	::v-deep(.slide) {
 		scroll-snap-align: start;
-		padding-left: v-bind(gap);
+		padding-left: v-bind(_trackGap);
 		flex-shrink: 0;
+		flex-grow: 0;
 		&:first-child {
-			margin-left: var(--margin-first);
+			margin-left: calc(-1 * (v-bind(_slideGap) - v-bind(_trackGap)));
 			scroll-snap-align: start;
-			padding-left: v-bind(gap);
+			padding-left: v-bind(_trackGap);
 		}
 		&:last-child {
-			margin-right: var(--margin-last);
 			scroll-snap-align: end;
-			padding-left: v-bind(gap);
+			margin-right: 0;
+			padding-right: calc(1 * v-bind(_trackGap));
 		}
 	}
 
 	&.center {
 		.track {
-			gap: v-bind(gap);
+			gap: v-bind(_slideGap);
+			&::after {
+				margin-left: calc(-1 * v-bind(_slideGap));
+			}
+
 		}
 		::v-deep(.slide:not(:first-child):not(:last-child)) {
+			padding-left: 0;
+			margin-left: 0;
 			scroll-snap-align: center;
 		}
 		::v-deep(.slide:not(:first-child)) {
 			padding-left: unset;
+		}
+		::v-deep(.slide:first-child) {
+			margin-left: calc(-1 * v-bind(_slideGap));
 		}
 	}
 
@@ -457,11 +497,23 @@ watch(modelValue, () => {
 		::v-deep(.slide:not(:last-child)) {
 			scroll-snap-align: center;
 		}		
+		::v-deep(.slide:first-child) {
+			padding-left: unset;
+			margin-left: calc(var(--margin-first) - v-bind(_slideGap));
+		}
 	}
 
 	&.center.center-last {
+		.track {
+			&::after {
+				margin-left: 0;
+			}
+		}
 		::v-deep(.slide:not(:first-child)) {
 			scroll-snap-align: center;
+		}
+		::v-deep(.slide:last-child) {
+			margin-right: calc(var(--margin-last) - v-bind(_slideGap));
 		}
 	}
 	.navigation {
