@@ -4,7 +4,7 @@
 			['--margin-first']: marginFirst + 'px',
 			['--margin-last']: marginLast + 'px',
 		}"
-		:class="{ grabbing, mouse, center, ['center-first']: centerFirst, ['center-last']: centerFirst }" 
+		:class="{ grabbing, mouse, center, ['center-first']: centerFirst, ['center-last']: centerLast }" 
 		ref="component"
 		v-drag-scroll.x="mouse" 
 		@scroll="onScroll"
@@ -79,7 +79,7 @@ defineExpose({ goTo })
 
 const componentId = Date.now()
 
-const { modelValue, captureScroll, center, duration, gap, slideGap, trackGap } = toRefs(props)
+const { modelValue, captureScroll, center, duration, gap, slideGap, trackGap, centerFirst, centerLast } = toRefs(props)
 
 const component = ref(null)
 const track = ref(null)
@@ -144,11 +144,11 @@ function updateLayout() {
 		return
 	}
 	
-	if (props.center && props.centerFirst) {
+	if (centerFirst.value) {
 		marginFirst.value = (width.value - elements[0].offsetWidth) / 2
 	}
 
-	if (props.center && props.centerLast) {
+	if (centerLast.value) {
 		marginLast.value = (width.value - elements[elements.length - 1].offsetWidth) / 2
 	}
 	emit('layout')
@@ -192,17 +192,7 @@ function goTo(index, force) {
 		}
 	}
 
-	if (!center.value) {
-		gsap.to(component.value, { 
-			scrollTo: {
-				autoKill: true,  
-				x: element,
-			}, 
-			ease: "power2",
-			duration: force ? 0 : duration.value ,
-			onComplete: syncModel
-		})
-	} else {
+	if (center.value || (centerFirst.value && index == 0) || (centerLast.value || index == total - 1)) {
 		let offsetX = (component.value.clientWidth - element?.clientWidth) / 2
 		if (!props.centerFirst && index == 0) offsetX = 0
 		gsap.to(component.value, {
@@ -213,6 +203,16 @@ function goTo(index, force) {
 			}, 
 			ease: "power2",
 			duration: force ? 0 : duration.value,
+			onComplete: syncModel
+		})
+	} else {
+		gsap.to(component.value, { 
+			scrollTo: {
+				autoKill: true,  
+				x: element,
+			}, 
+			ease: "power2",
+			duration: force ? 0 : duration.value ,
 			onComplete: syncModel
 		})
 	}
@@ -493,29 +493,26 @@ watch(modelValue, () => {
 		}
 	}
 
-	&.center.center-first {
-		::v-deep(.slide:not(:last-child)) {
-			scroll-snap-align: center;
-		}		
+	&.center-first {
 		::v-deep(.slide:first-child) {
+			scroll-snap-align: center;
 			padding-left: unset;
 			margin-left: calc(var(--margin-first) - v-bind(_slideGap));
 		}
 	}
 
-	&.center.center-last {
+	&.center-last {
 		.track {
 			&::after {
 				margin-left: 0;
 			}
 		}
-		::v-deep(.slide:not(:first-child)) {
-			scroll-snap-align: center;
-		}
 		::v-deep(.slide:last-child) {
+			scroll-snap-align: center;
 			margin-right: calc(var(--margin-last) - v-bind(_slideGap));
 		}
 	}
+	
 	.navigation {
 		position: sticky;
 		left: 0;
