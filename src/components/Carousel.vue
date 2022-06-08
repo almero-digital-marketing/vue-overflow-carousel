@@ -4,7 +4,16 @@
 			['--margin-first']: marginFirst + 'px',
 			['--margin-last']: marginLast + 'px',
 		}"
-		:class="{ grabbing, mouse, center, ['center-first']: centerFirst, ['center-last']: centerLast }" 
+		:class="{ 
+			grabbing, 
+			mouse, 
+			center, 
+			['center-first']: centerFirst, 
+			['center-last']: centerLast, 
+			['direction-none']: scrollDirection == 0, 
+			['direction-forward']: scrollDirection == 1, 
+			['direction-backward']: scrollDirection == -1 
+		}" 
 		ref="component"
 		v-drag-scroll.x="mouse" 
 		@scroll="onScroll"
@@ -16,11 +25,11 @@
 		@touchstart="onTouchStart">
 		<div class="navigation" v-if="overlay">
 			<div class="overlay">
-				<slot name="overlay" :scroller="component" :active="active" :progress="progress"></slot>
+				<slot name="overlay" :scroller="component" :active="active" :progress="progress" :scrollDirection="scrollDirection"></slot>
 			</div>
 		</div>
 		<div class="track" ref="track">
-			<slot :scroller="component" :active="active" :progress="progress"></slot>
+			<slot :scroller="component" :active="active" :progress="progress" :scrollDirection="scrollDirection"></slot>
 		</div>
 	</div>
 </template>
@@ -92,6 +101,7 @@ const marginFirst = ref(0)
 const marginLast = ref(0)
 const active = ref(0)
 const progress = ref(0)
+const scrollDirection = ref(0)
 
 const _slideGap = computed(() => gap.value || slideGap.value)
 const _trackGap = computed(() => gap.value || trackGap.value)
@@ -101,7 +111,6 @@ provide('active', active)
 let step = -1
 let total = 0
 let semaphor = true
-let scrollDirection = 0
 
 let lastScrollLeft = 0
 
@@ -238,7 +247,7 @@ function getActive() {
 			const elementInsideEnd = elementStart + (elementEnd - elementStart) * .75
 
 			if (center.value) {
-				const next = Math.max(0, Math.min(index + scrollDirection, elements.length - 1))
+				const next = Math.max(0, Math.min(index + scrollDirection.value, elements.length - 1))
 				const nextElement = elements[next]
 				const nextElementStart = nextElement.getBoundingClientRect().x - component.value.getBoundingClientRect().x
 				const nextElementEnd = nextElementStart + nextElement.offsetWidth
@@ -249,20 +258,20 @@ function getActive() {
 					initialStep = index
 					break
 				}
-				if (scrollDirection > 0 && viewportCenter > elementInsideEnd && viewportCenter < nextInsideStart) {
+				if (scrollDirection.value > 0 && viewportCenter > elementInsideEnd && viewportCenter < nextInsideStart) {
 					initialStep = next
 					break
 				}
-				if (scrollDirection < 0 && viewportCenter < elementInsideStart && viewportCenter > nextInsideEnd) {
+				if (scrollDirection.value < 0 && viewportCenter < elementInsideStart && viewportCenter > nextInsideEnd) {
 					initialStep = next
 					break
 				}
 			} else {
-				if (scrollDirection > 0 && elementStart >= 0) {
+				if (scrollDirection.value > 0 && elementStart >= 0) {
 					initialStep = index
 					break
 				}
-				if (scrollDirection < 0 && elementEnd > 0) {
+				if (scrollDirection.value < 0 && elementEnd > 0) {
 					initialStep = index
 					break
 				}
@@ -385,9 +394,9 @@ function onScroll() {
 	if (!component.value) return
 
 	if (component.value.scrollLeft > lastScrollLeft) {
-		scrollDirection = 1
+		scrollDirection.value = 1
 	} else {
-		scrollDirection = -1
+		scrollDirection.value = -1
 	}
 	lastScrollLeft = component.value.scrollLeft
 
