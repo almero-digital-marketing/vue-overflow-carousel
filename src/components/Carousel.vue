@@ -103,8 +103,14 @@ const active = ref(0)
 const progress = ref(0)
 const scrollDirection = ref(0)
 
-const _slideGap = computed(() => gap.value || slideGap.value)
-const _trackGap = computed(() => gap.value || trackGap.value)
+function normalizeUnits(value) {
+    if (!value) return '0px'
+    else if (typeof value == 'string') return value
+    return value + 'px'
+}
+
+const _slideGap = computed(() => normalizeUnits(gap.value || slideGap.value))
+const _trackGap = computed(() => normalizeUnits(gap.value || trackGap.value))
 
 provide('active', active)
 
