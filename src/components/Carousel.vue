@@ -42,7 +42,7 @@ import { gsap } from 'gsap'
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
 gsap.registerPlugin(ScrollToPlugin)
 
-const emit = defineEmits(['update:modelValue', 'progress', 'layout'])
+const emit = defineEmits(['update:modelValue', 'progress', 'layout', 'change'])
 const props = defineProps({
     captureScroll: {
       type: Boolean,
@@ -412,6 +412,7 @@ function onScroll() {
 		scrolling = waitForScrollEnd(component.value).then(() => {
 			active.value = getActive()
 			if (window.scrollCarouselId == componentId) {
+				emit('change', active.value)
 				emit('update:modelValue', active.value)
 			}
 			scrolling = false
