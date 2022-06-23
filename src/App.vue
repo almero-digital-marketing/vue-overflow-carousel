@@ -55,7 +55,7 @@
     </Slide>
   </Carousel>
   <div class="markers">
-    <Carousel class="carousel-2" :capture-scroll="true" :center="true" :center-first="false" :center-last="true" slide-gap="100px" v-model="active" :overlay="true">
+    <Carousel class="carousel-2" :capture-scroll="true" :center="true" :center-first="true" :center-last="true" slide-gap="100px" track-gap="200px" v-model="active" :overlay="true">
       <template #overlay="overlay">
         <div class="wheel">
           <div class="circle">{{ overlay.progress }}</div>
@@ -114,7 +114,7 @@
 
 
   <div class="markers">
-    <Carousel class="carousel-2" :capture-scroll="true" :center="false" :center-first="false" :center-last="false" slide-gap="100px" track-gap="20px" :overlay="true">
+    <Carousel class="carousel-2" :capture-scroll="true" :center="false" :center-first="false" :center-last="false" slide-gap="100px" track-gap="200px" :overlay="true">
       <template #overlay="overlay">
         <div class="wheel">
           <div class="circle">{{ overlay.progress }}</div>
@@ -338,6 +338,9 @@ body {
   position: fixed;
   top: 0;
   left: 0;
+}
+.slide { 
+  border: 1px solid purple;
 }
 body {
   padding-bottom: 200vh;

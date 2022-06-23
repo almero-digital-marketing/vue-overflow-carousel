@@ -442,6 +442,9 @@ watch(modelValue, () => {
 	cursor: grab;
 	display: flex;
 
+	--slide-gap: v-bind(_slideGap);
+	--track-gap: v-bind(_trackGap);
+
 	&.grabbing {
 		cursor: grabbing;
 	}
@@ -452,7 +455,6 @@ watch(modelValue, () => {
 
 	.track {
 		display: inline-flex;
-		gap: calc(v-bind(_slideGap) - v-bind(_trackGap));
 		
 		&::before, 
 		&::after {
@@ -465,55 +467,61 @@ watch(modelValue, () => {
 			height: 100%;
 			width: 100px;
 		}
-
-		&::after {
-			margin-left: calc(-1 * v-bind(_slideGap) + v-bind(_trackGap));
-		}
 	}
 
 	::v-deep(.slide) {
 		scroll-snap-align: start;
-		padding-left: v-bind(_trackGap);
+		padding-left: var(--track-gap);
 		flex-shrink: 0;
 		flex-grow: 0;
 		&:first-child {
-			margin-left: calc(-1 * (v-bind(_slideGap) - v-bind(_trackGap)));
 			scroll-snap-align: start;
-			padding-left: v-bind(_trackGap);
+			padding-left: var(--track-gap);
 		}
 		&:last-child {
 			scroll-snap-align: end;
 			margin-right: 0;
-			padding-right: calc(1 * v-bind(_trackGap));
+			padding-right: calc(var(--track-gap));
+		}
+		&:not(:first-child) {
+			padding-left: var(--slide-gap);
 		}
 	}
 
 	&.center {
 		.track {
-			gap: v-bind(_slideGap);
+			gap: var(--slide-gap);
 			&::after {
-				margin-left: calc(-1 * v-bind(_slideGap));
+				margin-left: calc(-1 * var(--slide-gap));
 			}
 
 		}
-		::v-deep(.slide:not(:first-child):not(:last-child)) {
-			padding-left: 0;
-			margin-left: 0;
-			scroll-snap-align: center;
-		}
-		::v-deep(.slide:not(:first-child)) {
-			padding-left: unset;
-		}
-		::v-deep(.slide:first-child) {
-			margin-left: calc(-1 * v-bind(_slideGap));
+		::v-deep(.slide) {
+			&:first-child {
+				margin-left: calc(-1 * var(--slide-gap));
+			}
+			&:last-child {
+				padding-right: calc(1 * var(--track-gap));
+				margin-right: 0;
+			}
+			&:not(:first-child):not(:last-child) {
+				padding-left: 0;
+				margin-left: 0;
+				scroll-snap-align: center;
+			}
+			&:not(:first-child) {
+				padding-left: unset;
+			}
 		}
 	}
 
 	&.center-first {
-		::v-deep(.slide:first-child) {
-			scroll-snap-align: center;
-			padding-left: unset;
-			margin-left: calc(var(--margin-first) - v-bind(_slideGap));
+		::v-deep(.slide) {
+			&:first-child {
+				scroll-snap-align: center;
+				padding-left: unset;
+				margin-left: calc(var(--margin-first) - var(--slide-gap));
+			}
 		}
 	}
 
@@ -523,9 +531,12 @@ watch(modelValue, () => {
 				margin-left: 0;
 			}
 		}
-		::v-deep(.slide:last-child) {
-			scroll-snap-align: center;
-			margin-right: calc(var(--margin-last) - v-bind(_slideGap));
+		::v-deep(.slide) {
+			&:last-child {
+				scroll-snap-align: center;
+				margin-right: calc(var(--margin-last) - var(--slide-gap));
+				padding-right: unset;
+			}
 		}
 	}
 	
