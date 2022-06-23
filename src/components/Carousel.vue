@@ -12,7 +12,8 @@
 			['center-last']: centerLast, 
 			['direction-none']: scrollDirection == 0, 
 			['direction-forward']: scrollDirection == 1, 
-			['direction-backward']: scrollDirection == -1 
+			['direction-backward']: scrollDirection == -1,
+			['auto-width']: slidesPerPage > -1
 		}" 
 		ref="component"
 		v-drag-scroll.x="mouse" 
@@ -34,7 +35,7 @@
 	</div>
 </template>
 <script setup>
-import { ref, onMounted, onUnmounted, toRefs, watch, onBeforeUnmount, provide, computed } from 'vue'
+import { ref, onMounted, onUnmounted, toRefs, watch, onBeforeUnmount, provide, computed, nextTick } from 'vue'
 import vDragScroll from 'vue-dragscroll/src/directive-next'
 import debounce from 'debounce'
 import { waitForScrollEnd } from '../lib/scrolling'
@@ -79,6 +80,10 @@ const props = defineProps({
       type: Number,
       default: .6,
     },
+	slidesPerPage: {
+		type: Number,
+		default: -1
+	},
 	overlay: {
       type: Boolean,
       default: false,
@@ -151,7 +156,7 @@ function updateLayout() {
 	width.value = component.value.offsetWidth
 	height.value = component.value.offsetHeight
 
-	let elements = component.value.querySelectorAll('.slide')
+	let elements = component.value.querySelectorAll('.placeholder')
     total = elements.length
 	if (!elements.length) {
 		marginFirst.value = 0
@@ -176,6 +181,10 @@ onMounted(() => {
 	resizeObserver.observe(component.value)
 	resizeObserver.observe(track.value)
 	updateLayout()
+
+	nextTick().then(() => {
+		goTo(modelValue.value || 0, true)
+	})
 })
 onBeforeUnmount(() => {
 	resizeObserver.disconnect()
@@ -193,7 +202,7 @@ let goToIndex
 function goTo(index, force) {
 	if (!component.value) return
 
-	const elements = component.value.getElementsByClassName('slide')
+	const elements = component.value.querySelectorAll('.track > .placeholder')
 	if (!elements.length) return
 
 	index = Math.min(Math.max(index, 0), total - 1)
@@ -239,7 +248,7 @@ function getActive() {
 	const viewportCenter = width.value / 2
 	let initialStep = step
 	if (component.value.scrollLeft) {
-		const elements = component.value.querySelectorAll('.slide')
+		const elements = component.value.querySelectorAll('.track > .placeholder')
 		if (!elements.length) return
 
 		const firstElement = elements[0]
@@ -442,8 +451,15 @@ watch(modelValue, () => {
 	cursor: grab;
 	display: flex;
 
+	--carousel-width: calc(1px * v-bind(width));
+	--carousel-height: calc(1px * v-bind(height));
+
 	--slide-gap: v-bind(_slideGap);
 	--track-gap: v-bind(_trackGap);
+
+	&.auto-width {
+		--slides-per-page: v-bind(slidesPerPage);
+	}
 
 	&.grabbing {
 		cursor: grabbing;
@@ -469,25 +485,6 @@ watch(modelValue, () => {
 		}
 	}
 
-	::v-deep(.slide) {
-		scroll-snap-align: start;
-		padding-left: var(--track-gap);
-		flex-shrink: 0;
-		flex-grow: 0;
-		&:first-child {
-			scroll-snap-align: start;
-			padding-left: var(--track-gap);
-		}
-		&:last-child {
-			scroll-snap-align: end;
-			margin-right: 0;
-			padding-right: calc(var(--track-gap));
-		}
-		&:not(:first-child) {
-			padding-left: var(--slide-gap);
-		}
-	}
-
 	&.center {
 		.track {
 			gap: var(--slide-gap);
@@ -496,46 +493,12 @@ watch(modelValue, () => {
 			}
 
 		}
-		::v-deep(.slide) {
-			&:first-child {
-				margin-left: calc(-1 * var(--slide-gap));
-			}
-			&:last-child {
-				padding-right: calc(1 * var(--track-gap));
-				margin-right: 0;
-			}
-			&:not(:first-child):not(:last-child) {
-				padding-left: 0;
-				margin-left: 0;
-				scroll-snap-align: center;
-			}
-			&:not(:first-child) {
-				padding-left: unset;
-			}
-		}
-	}
-
-	&.center-first {
-		::v-deep(.slide) {
-			&:first-child {
-				scroll-snap-align: center;
-				padding-left: unset;
-				margin-left: calc(var(--margin-first) - var(--slide-gap));
-			}
-		}
 	}
 
 	&.center-last {
 		.track {
 			&::after {
 				margin-left: 0;
-			}
-		}
-		::v-deep(.slide) {
-			&:last-child {
-				scroll-snap-align: center;
-				margin-right: calc(var(--margin-last) - var(--slide-gap));
-				padding-right: unset;
 			}
 		}
 	}
@@ -551,8 +514,8 @@ watch(modelValue, () => {
 			position: absolute;
 			top: 0;
 			left: 0;
-			width: calc(1px * v-bind(width));
-			height: calc(1px * v-bind(height));
+			width: var(--carousel-width);
+			height: var(--carousel-height);
 			pointer-events: none;
 		}
 	}
