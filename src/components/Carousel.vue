@@ -98,7 +98,7 @@ defineExpose({ goTo })
 
 const componentId = Date.now()
 
-const { modelValue, captureScroll, center, duration, gap, slideGap, trackGap, centerFirst, centerLast } = toRefs(props)
+const { modelValue, captureScroll, center, duration, gap, slideGap, trackGap, centerFirst, centerLast, snap } = toRefs(props)
 
 const component = ref(null)
 const track = ref(null)
@@ -195,8 +195,9 @@ onBeforeUnmount(() => {
 	resizeObserver.disconnect()
 })
 
-function toggleSnap(snap) {
-	if (snap) {
+function toggleSnap(toggleSnap) {
+	if (!snap) return
+	if (toggleSnap) {
 		component.value.style['scroll-snap-type'] = 'x mandatory'
 	} else {
 		component.value.style['scroll-snap-type'] = 'none'
