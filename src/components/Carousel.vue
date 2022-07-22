@@ -196,7 +196,7 @@ onBeforeUnmount(() => {
 })
 
 function toggleSnap(toggle) {
-	if (!snap) return
+	if (!snap.value) return
 	if (toggle) {
 		component.value.style['scroll-snap-type'] = 'x mandatory'
 	} else {
