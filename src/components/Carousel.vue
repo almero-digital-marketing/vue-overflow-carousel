@@ -195,9 +195,9 @@ onBeforeUnmount(() => {
 	resizeObserver.disconnect()
 })
 
-function toggleSnap(toggleSnap) {
+function toggleSnap(toggle) {
 	if (!snap) return
-	if (toggleSnap) {
+	if (toggle) {
 		component.value.style['scroll-snap-type'] = 'x mandatory'
 	} else {
 		component.value.style['scroll-snap-type'] = 'none'
