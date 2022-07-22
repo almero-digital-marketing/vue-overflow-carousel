@@ -22,10 +22,13 @@ onMounted(toggleActive)
 </script>
 <style lang="less" scoped>
 .placeholder {
-    scroll-snap-align: start;
     padding-left: var(--track-gap);
     flex-shrink: 0;
     flex-grow: 0;
+
+    .snap & {
+        scroll-snap-align: start;
+    }
 
     &:first-child {
         scroll-snap-align: start;

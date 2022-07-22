@@ -195,10 +195,9 @@ onBeforeUnmount(() => {
 	resizeObserver.disconnect()
 })
 
-function toggleSnap(toggle) {
-	if (!snap.value) return
-	if (toggle) {
-		component.value.style['scroll-snap-type'] = 'x mandatory'
+function toggleSnap(active) {
+	if (active) {
+		component.value.style['scroll-snap-type'] = snap.value ? 'x mandatory' : 'x proximity'
 	} else {
 		component.value.style['scroll-snap-type'] = 'none'
 	}
@@ -462,6 +461,7 @@ watch(modelValue, () => {
 	--slide-gap: v-bind(_slideGap);
 	--track-gap: v-bind(_trackGap);
 
+	scroll-snap-type: x proximity;
 	&.snap {
 		scroll-snap-type: x mandatory;
 	}

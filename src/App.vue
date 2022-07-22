@@ -114,7 +114,7 @@
 
 
   <div class="markers">
-    <Carousel class="carousel-2" :capture-scroll="true" :center="false" :center-first="false" :center-last="false" slide-gap="100px" track-gap="200px" :overlay="true">
+    <Carousel class="carousel-2" :capture-scroll="true" :center="false" :center-first="false" :center-last="false" slide-gap="100px" track-gap="200px" :overlay="true" :snap="false">
       <template #overlay="overlay">
         <div class="wheel">
           <div class="circle">{{ overlay.progress }}</div>
