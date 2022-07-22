@@ -7,7 +7,8 @@
 		:class="{ 
 			grabbing, 
 			mouse, 
-			center, 
+			center,
+			snap, 
 			['center-first']: centerFirst, 
 			['center-last']: centerLast, 
 			['direction-none']: scrollDirection == 0, 
@@ -88,6 +89,10 @@ const props = defineProps({
       type: Boolean,
       default: false,
     },
+	snap: {
+		type: Boolean,
+		default: true
+	}
 })
 defineExpose({ goTo })
 
@@ -447,7 +452,6 @@ watch(modelValue, () => {
 <style lang="less" scoped>
 .carousel {
 	overflow-x: scroll;
-	scroll-snap-type: x mandatory;
 	cursor: grab;
 	display: flex;
 
@@ -456,6 +460,10 @@ watch(modelValue, () => {
 
 	--slide-gap: v-bind(_slideGap);
 	--track-gap: v-bind(_trackGap);
+
+	&.snap {
+		scroll-snap-type: x mandatory;
+	}
 
 	&.auto-width {
 		--slides-per-page: v-bind(slidesPerPage);
