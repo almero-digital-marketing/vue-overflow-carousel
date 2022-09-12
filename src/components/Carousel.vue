@@ -5,6 +5,7 @@
 			['--margin-last']: marginLast + 'px',
 		}"
 		:class="{ 
+			disabled,
 			grabbing, 
 			mouse, 
 			center,
@@ -17,7 +18,7 @@
 			['auto-width']: slidesPerPage > -1
 		}" 
 		ref="component"
-		v-drag-scroll.x="mouse" 
+		v-drag-scroll.x="mouse && !disabled" 
 		@scroll="onScroll"
 		@mousewheel="onMouseWheel" 
 		@mousedown="onMouseDown" 
@@ -106,6 +107,7 @@ const grabbing = ref(false)
 const mouse = ref(!!!('ontouchstart' in window))
 const width = ref(0)
 const height = ref(0)
+const disabled = ref(false)
 
 const marginFirst = ref(0)
 const marginLast = ref(0)
@@ -176,7 +178,9 @@ function updateLayout() {
 	if (centerLast.value) {
 		marginLast.value = (width.value - elements[elements.length - 1].offsetWidth) / 2
 	}
-	emit('layout')
+	disabled.value = component.value.offsetWidth > track.value.offsetWidth
+
+	emit('layout', !disabled.value)
 
 	calcProgress()
 }
@@ -205,7 +209,7 @@ function toggleSnap(active) {
 
 let goToIndex
 function goTo(index, force) {
-	if (!component.value) return
+	if (!component.value || disabled.value) return
 
 	const elements = component.value.querySelectorAll('.track > .placeholder')
 	if (!elements.length) return
@@ -324,7 +328,7 @@ function move(direction) {
 
 let spinning
 function onMouseWheel(e) {
-	if (!component.value) return
+	if (!component.value || disabled.value) return
 	window.scrollCarouselId = componentId
 	if (!captureScroll.value || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
 
@@ -345,23 +349,33 @@ function onMouseWheel(e) {
 }
 
 function onMouseMove() {
+	if (disabled.value) return
+
 	toggleFocus()
 }
 
 function onMouseDown() {
+	if (disabled.value) return
+
 	toggleSnap(false)
 	toggleGrab(true)
 }
 
 function onMouseUp() {
+	if (disabled.value) return
+
 	toggleGrab(false)
 }
 
 function onMouseLeave() {
+	if (disabled.value) return
+
 	toggleGrab(false)
 }
 
 function onTouchStart() {
+	if (disabled.value) return
+
 	toggleSnap(true)
 	toggleFocus()
 }
@@ -452,6 +466,7 @@ watch(modelValue, () => {
 <style lang="less" scoped>
 .carousel {
 	overflow-x: scroll;
+	overflow-y: hidden;
 	cursor: grab;
 	display: flex;
 
@@ -491,6 +506,17 @@ watch(modelValue, () => {
 			z-index: 10;
 			height: 100%;
 			width: 100px;
+		}
+	}
+	&.disabled {
+		overflow: hidden;
+		cursor: unset;
+
+		.track {
+			&::before, 
+			&::after {
+				display: none;
+			}
 		}
 	}
 
