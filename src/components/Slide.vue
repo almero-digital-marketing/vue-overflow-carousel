@@ -77,6 +77,14 @@ onMounted(toggleActive)
         }
     }
 
+    .offset-last & {
+        &:last-child {
+            scroll-snap-align: start;
+            margin-right: var(--margin-last);
+            padding-right: unset;
+        }
+    }
+
     .auto-width & {
         .slide {
             width: calc((var(--carousel-width) - 2 * var(--track-gap) - (var(--slides-per-page) - 1) * var(--slide-gap)) / var(--slides-per-page));

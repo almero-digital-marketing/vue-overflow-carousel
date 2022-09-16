@@ -12,6 +12,7 @@
 			snap, 
 			['center-first']: centerFirst, 
 			['center-last']: centerLast, 
+			['offset-last']: _offsetLast, 
 			['direction-none']: scrollDirection == 0, 
 			['direction-forward']: scrollDirection == 1, 
 			['direction-backward']: scrollDirection == -1,
@@ -37,7 +38,7 @@
 	</div>
 </template>
 <script setup>
-import { ref, onMounted, onUnmounted, toRefs, watch, onBeforeUnmount, provide, computed, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, toRefs, watch, onBeforeUnmount, provide, computed, } from 'vue'
 import vDragScroll from 'vue-dragscroll/src/directive-next'
 import debounce from 'debounce'
 import { waitForScrollEnd } from '../lib/scrolling'
@@ -67,6 +68,10 @@ const props = defineProps({
       type: Boolean,
       default: false,
     },
+    offsetLast: {
+      type: Boolean,
+      default: false,
+    },
 	gap: {
       type: String,
     },
@@ -93,13 +98,17 @@ const props = defineProps({
 	snap: {
 		type: Boolean,
 		default: true
+	},
+	debug: {
+		type: Boolean,
+		default: false
 	}
 })
 defineExpose({ goTo })
 
 const componentId = Date.now()
 
-const { modelValue, captureScroll, center, duration, gap, slideGap, trackGap, centerFirst, centerLast, snap } = toRefs(props)
+const { modelValue, captureScroll, center, duration, gap, slideGap, trackGap, centerFirst, centerLast, snap, offsetLast, debug } = toRefs(props)
 
 const component = ref(null)
 const track = ref(null)
@@ -123,6 +132,7 @@ function normalizeUnits(value) {
 
 const _slideGap = computed(() => normalizeUnits(gap.value || slideGap.value))
 const _trackGap = computed(() => normalizeUnits(gap.value || trackGap.value))
+const _offsetLast = computed(() => offsetLast.value || modelValue.value != null && !center.value)
 
 provide('active', active)
 
@@ -178,22 +188,30 @@ function updateLayout() {
 	if (centerLast.value) {
 		marginLast.value = (width.value - elements[elements.length - 1].offsetWidth) / 2
 	}
+
+	if (_offsetLast.value) {
+		marginLast.value = width.value - elements[elements.length - 1].offsetWidth
+	}
+
+
 	disabled.value = component.value.offsetWidth > track.value.offsetWidth
+	debug.value && track.value.childNodes.forEach(el => console.log(el.offsetWidth))
+	debug.value && console.log('Disabled:', track.value.childNodes.length, component.value.offsetWidth, track.value.offsetWidth, disabled.value)
 
 	emit('layout', !disabled.value)
 
 	calcProgress()
 }
 
-let resizeObserver = new ResizeObserver(debounce(updateLayout, 100))
+let resizeObserver = new ResizeObserver(debounce(() => {
+	updateLayout()
+	if (modelValue.value != null) {
+		goTo(modelValue.value || 0, true)
+	}
+}, 100))
 onMounted(() => {
 	resizeObserver.observe(component.value)
 	resizeObserver.observe(track.value)
-	updateLayout()
-
-	nextTick().then(() => {
-		goTo(modelValue.value || 0, true)
-	})
 })
 onBeforeUnmount(() => {
 	resizeObserver.disconnect()
@@ -208,7 +226,9 @@ function toggleSnap(active) {
 }
 
 let goToIndex
-function goTo(index, force) {
+function goTo(index, force) {		
+	
+	debug.value && console.log('Go to:', index, force, disabled.value)
 	if (!component.value || disabled.value) return
 
 	const elements = component.value.querySelectorAll('.track > .placeholder')
@@ -225,9 +245,13 @@ function goTo(index, force) {
 		}
 	}
 
-	if (center.value || (centerFirst.value && index == 0) || (centerLast.value || index == total - 1)) {
+	if (center.value || 
+		(centerFirst.value && index == 0) || 
+		(!_offsetLast.value && (centerLast.value || index == total - 1))
+	) {
 		let offsetX = (component.value.clientWidth - element?.clientWidth) / 2
 		if (!props.centerFirst && index == 0) offsetX = 0
+		debug.value && console.log('Go to 1:', index, force)
 		gsap.to(component.value, {
 			scrollTo: { 
 				x: element, 
@@ -239,6 +263,7 @@ function goTo(index, force) {
 			onComplete: syncModel
 		})
 	} else {
+		debug.value && console.log('Go to 2:', index, force)
 		gsap.to(component.value, { 
 			scrollTo: {
 				autoKill: true,  
@@ -318,7 +343,7 @@ function getActive() {
 let moving
 function move(direction) {
     if (!moving) {
-        step = Math.max(Math.min(getActive() + direction, total), 0)
+        step = Math.max(Math.min(getActive() + direction, total - 1), 0)
         moving = setTimeout(() => {
             moving = null
         }, 100)
@@ -399,6 +424,8 @@ function calcProgress() {
 }
 
 function enforceBounds() {
+	debug.value && console.log('Enforce bounds:', progress.value)
+
 	if (!mouse.value) return
 	if (progress.value > 1) {
 		gsap.to(component.value, {
