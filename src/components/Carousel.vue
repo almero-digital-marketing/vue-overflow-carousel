@@ -10,8 +10,8 @@
 			mouse, 
 			center,
 			snap, 
-			['center-first']: centerFirst, 
-			['center-last']: centerLast, 
+			['center-first']: _centerFirst, 
+			['center-last']: _centerLast, 
 			['offset-last']: _offsetLast, 
 			['direction-none']: scrollDirection == 0, 
 			['direction-forward']: scrollDirection == 1, 
@@ -62,15 +62,15 @@ const props = defineProps({
     },
     centerFirst: {
       type: Boolean,
-      default: false,
+      default: undefined,
     },
     centerLast: {
       type: Boolean,
-      default: false,
+      default: undefined,
     },
     offsetLast: {
       type: Boolean,
-      default: false,
+      default: undefined,
     },
 	gap: {
       type: String,
@@ -132,7 +132,9 @@ function normalizeUnits(value) {
 
 const _slideGap = computed(() => normalizeUnits(gap.value || slideGap.value))
 const _trackGap = computed(() => normalizeUnits(gap.value || trackGap.value))
-const _offsetLast = computed(() => offsetLast.value || modelValue.value != null && !center.value)
+const _offsetLast = computed(() => offsetLast.value === undefined ? modelValue.value != null && !center.value : offsetLast.value)
+const _centerLast = computed(() => centerLast.value === undefined ? modelValue.value != null && center.value : centerLast.value)
+const _centerFirst = computed(() => centerFirst.value === undefined ? modelValue.value != null && center.value : centerFirst.value)
 
 provide('active', active)
 
@@ -181,11 +183,11 @@ function updateLayout() {
 		return
 	}
 	
-	if (centerFirst.value) {
+	if (_centerFirst.value) {
 		marginFirst.value = (width.value - elements[0].offsetWidth) / 2
 	}
 
-	if (centerLast.value) {
+	if (_centerLast.value) {
 		marginLast.value = (width.value - elements[elements.length - 1].offsetWidth) / 2
 	}
 
@@ -248,11 +250,11 @@ function goTo(index, force) {
 	}
 
 	if (center.value || 
-		(centerFirst.value && index == 0) || 
-		(!_offsetLast.value && (centerLast.value || index == total - 1))
+		(_centerFirst.value && index == 0) || 
+		(!_offsetLast.value && (_centerLast.value || index == total - 1))
 	) {
 		let offsetX = (component.value.clientWidth - element?.clientWidth) / 2
-		if (!props.centerFirst && index == 0) offsetX = 0
+		if (!_centerFirst.value && index == 0) offsetX = 0
 		debug.value && console.log('Go to 1:', index, force)
 		gsap.to(component.value, {
 			scrollTo: { 
