@@ -193,10 +193,12 @@ function updateLayout() {
 		marginLast.value = width.value - elements[elements.length - 1].offsetWidth
 	}
 
-
-	disabled.value = component.value.offsetWidth > track.value.offsetWidth
-	debug.value && track.value.childNodes.forEach(el => console.log(el.offsetWidth))
-	debug.value && console.log('Disabled:', track.value.childNodes.length, component.value.offsetWidth, track.value.offsetWidth, disabled.value)
+	let trackWidth = [...track.value.childNodes].reduce((total, item) => total + (item.offsetWidth || 0), 0)
+	debug.value && console.log('Disabled:', track.value.childNodes.length, component.value.offsetWidth, trackWidth, component.value.offsetWidth - trackWidth - 200)
+	disabled.value = component.value.offsetWidth >= trackWidth - 200
+	if (disabled.value) {
+		marginLast.value = 0
+	}
 
 	emit('layout', !disabled.value)
 

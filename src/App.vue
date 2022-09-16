@@ -11,7 +11,7 @@
     <Slide>
       0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.
     </Slide>
-    <Slide>
+    <!-- <Slide>
       1. Qui et assum labore assueverit. Corpora suscipiantur sit et. Fugit oblique torquatos et vel. Cu eos hinc volumus, duis nusquam corrumpit id has. Te ius debet propriae splendide.
     </Slide>
     <Slide>
@@ -52,7 +52,7 @@
     </Slide>
     <Slide>
       14. Ex vel hinc latine interpretaris, te veritus blandit eum, fabellas perpetua inciderint te eos. Sed scaevola lobortis ne, everti definitionem ad pro. Ut copiosae explicari elaboraret usu, nam at copiosae accusata. Ea pri mucius insolens. Qui adhuc denique te, id sensibus mandamus quo.
-    </Slide>
+    </Slide> -->
   </Carousel>
   <div class="markers">
     <Carousel class="carousel-2" :capture-scroll="true" :center="true" :center-first="true" :center-last="true" slide-gap="100px" track-gap="200px" v-model="active" :overlay="true" >
