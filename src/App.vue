@@ -7,7 +7,7 @@
     &nbsp;
     <button @click="active = 0">First</button>
   </div>
-  <Carousel id="carousel-1" :slides-per-page="2" :enabled="true" :duration=".4" v-model="active" gap="10px" :debug="true">
+  <Carousel id="carousel-1" :slides-per-page="2" :enabled="true" :duration=".4" v-model="active" gap="10px" :debug="false">
     <Slide>
       0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.
     </Slide>
@@ -114,10 +114,12 @@
 
 
   <div class="markers">
-    <Carousel class="carousel-2" :capture-scroll="true" :center="false" :center-first="false" :center-last="false" slide-gap="100px" track-gap="200px" :overlay="true" :snap="false" :offset-last="true">
-      <template #overlay="overlay">
+    <Carousel class="carousel-2" ref="navigation" :capture-scroll="true" :center="false" :center-first="false" :center-last="false" slide-gap="100px" track-gap="200px" :overlay="true" :snap="false" :debug="true">
+      <template #overlay="navigation">
         <div class="wheel">
-          <div class="circle">{{ overlay.progress }}</div>
+          <div class="circle">{{ navigation.progress }}</div>
+          <button @click="navigation.prev()">Prev</button>
+          <button @click="navigation.next(2)">Next</button>
         </div>
       </template>
       <template v-slot="carousel">
@@ -142,7 +144,7 @@
         <Slide>
           6. Ubique quaestio consulatu vel et. Cu mea cetero consectetuer, est et sale commodo. At dicit meliore ocurreret has, id pri mazim torquatos. Id his adipisci mandamus, has deserunt deseruisse eu, eam ne sint vide. Cum at malorum necessitatibus, ea duo iudico partem.
         </Slide>
-        <Slide>
+        <!-- <Slide>
           7. Ea duis lucilius delicatissimi per, id quo natum feugiat definitionem. No vis error forensibus. Quis dicta dolorum nec ne. Abhorreant instructior mediocritatem an mea. Oportere abhorreant est te. Ferri mnesarchum ea eos. Cum te perfecto disputando.
         </Slide>
         <Slide>
@@ -165,7 +167,7 @@
         </Slide>
         <Slide>
           14. Ex vel hinc latine interpretaris, te veritus blandit eum, fabellas perpetua inciderint te eos. Sed scaevola lobortis ne, everti definitionem ad pro. Ut copiosae explicari elaboraret usu, nam at copiosae accusata. Ea pri mucius insolens. Qui adhuc denique te, id sensibus mandamus quo.
-        </Slide>
+        </Slide> -->
       </template>
     </Carousel>
   </div>
@@ -228,7 +230,7 @@
       </template>
     </Carousel>
   </div>
-
+  
 
 </template>
 <script setup>
@@ -237,6 +239,7 @@ import Carousel from './components/Carousel.vue'
 import Slide from './components/Slide.vue'
 
 const active = ref(0)
+const navigation = ref(0)
 
 function test(e) {
   if (e.defaultPrevented) return
