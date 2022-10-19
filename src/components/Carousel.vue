@@ -173,17 +173,8 @@ provide('active', active)
 let step = -1
 let total = 0
 let semaphor = true
-
 let lastScrollLeft = 0
-
 let semaphorTimeout
-function toggleSemaphor() {
-    semaphor = false
-    clearTimeout(semaphorTimeout)
-    semaphorTimeout = setTimeout(() => semaphor = true, 200)
-}
-window.addEventListener('scroll', toggleSemaphor, { passive: true })
-onUnmounted(() => window.removeEventListener('scroll', toggleSemaphor))
 
 function toggleFocus({ target } = {}) {
 	if (target) {
@@ -286,34 +277,40 @@ function goTo(index, force) {
 		index = Math.min(Math.max(index, 0), total - 1)
 		const element = elements[index]
 		if (goToIndex == index) return
-		goToIndex = index
 	
-		hasPrev.value = goToIndex > 0
-		hasNext.value = goToIndex < elements.length - 1
+		hasPrev.value = index > 0
+		hasNext.value = index < elements.length - 1
 
 		let offsetX = 0
 		let x = element
 		let endOffset = component.value.scrollWidth - 200 - element.offsetLeft - element.offsetWidth
 		let minOffset = 0
 		if (center.value) {
-			let minOffset = (width.value - element?.clientWidth) / 2
+			let minOffset = (component.value.offsetWidth - element?.clientWidth) / 2
 			offsetX = minOffset
 			if (!_centerFirst.value && index == 0) offsetX = 0
 			else if (!_centerLast.value) {
-				minOffset = width.value / 2 - element.offsetWidth
+				minOffset = component.value.offsetWidth / 2 - element.offsetWidth
 			}
 		} else {
 			if (!_offsetLast.value) {
-				minOffset = width.value - element.offsetWidth
+				minOffset = component.value.offsetWidth - element.offsetWidth
 			}
 		}
 
 		if (endOffset < minOffset) {
+			const active = getActive()
+			if (active > index) {
+				return goTo(index - 1, force).then(resolve)
+			}
 			x = 'max'
 			offsetX = 100
 			hasNext.value = false
+			goToIndex = -1
+		} else {
+			goToIndex = index
 		}
-
+		
 		gsap.to(component.value, { 
 			scrollTo: {
 				autoKill: true,  
@@ -324,8 +321,8 @@ function goTo(index, force) {
 			duration: force ? 0 : duration.value,
 			onComplete: async () => {
 				updateNavigation()
-		
-				if (modelValue.value != null && modelValue.value != goToIndex) {
+				const active = getActive()
+				if (modelValue.value != null && modelValue.value != active) {
 					await goTo(modelValue.value, force)
 				}
 				enforceBounds(force)
@@ -416,11 +413,13 @@ function move(direction) {
         moving = setTimeout(() => {
             moving = null
         }, 100)
-		goTo(step)
+		return goTo(step)
     }
+	return Promise.resolve()
 }
 
 let spinning
+let wheelMoving
 function onMouseWheel(e) {
 	if (!component.value || disabled.value) return
 	window.scrollCarouselId = componentId
@@ -429,17 +428,21 @@ function onMouseWheel(e) {
 	mouse.value = true
 
     if (moving) e.preventDefault()
-    if (e.deltaY > 0 && component.value.scrollWidth - component.value.scrollLeft - width.value > 100 ||
-		e.deltaY < 0 && component.value.scrollLeft > 100) {
-		e.preventDefault()
-		if (semaphor) move(Math.sign(e.deltaY))
+	if (semaphor) {
+		if (e.deltaY > 0 && component.value.scrollWidth - component.value.scrollLeft - component.value.offsetWidth > 101 ||
+			e.deltaY < 0 && component.value.scrollLeft > 101) {
+			if (!spinning) {
+				move(Math.sign(e.deltaY))
+			}
+			e.preventDefault()
+		}
 	}
 	
 	clearTimeout(spinning)
 	spinning = setTimeout(() => {
-		enforceBounds()
+		spinning = undefined
 		mouse.value = !!!('ontouchstart' in window)
-	}, 200)
+	}, 80)
 }
 
 function onMouseMove(e) {
@@ -470,6 +473,8 @@ function onMouseEnter() {
 		grabbing.value = false
 		toggleGrab()
 	}
+
+    semaphorTimeout = setTimeout(() => semaphor = true, 200)
 }
 
 let grabbingTimeout
@@ -501,6 +506,9 @@ function onMouseLeave() {
 	clearTimeout(grabbingTimeout)
 	if (disabled.value) return
 	toggleGrab()
+
+    clearTimeout(semaphorTimeout)
+	semaphor = false
 }
 
 function onTouchStart() {
@@ -516,7 +524,6 @@ function toggleGrab() {
 			goToIndex = -1
 			const current = getActive()
 			goTo(current)
-			enforceBounds()
 		}
 	}
 }
