@@ -287,8 +287,10 @@ function updateLayout() {
 }
 
 function updateNavigation() {
-	hasNext.value = component.value.scrollWidth - component.value.scrollLeft - width.value > 100
-	hasPrev.value = component.value.scrollLeft > 100
+	if (component.value) {
+		hasNext.value = component.value.scrollWidth - component.value.scrollLeft - width.value > 100
+		hasPrev.value = component.value.scrollLeft > 100
+	}
 }
 
 let resizeObserver = new ResizeObserver(debounce(() => {
@@ -471,8 +473,8 @@ function onMouseWheel(e) {
     if (e.deltaY > 0 && component.value.scrollWidth - component.value.scrollLeft - width.value > 100 ||
 		e.deltaY < 0 && component.value.scrollLeft > 100) {
 		e.preventDefault()
+		if (semaphor) move(Math.sign(e.deltaY))
 	}
-	if (semaphor) move(Math.sign(e.deltaY))
 	
 	clearTimeout(spinning)
 	spinning = setTimeout(() => {
@@ -614,6 +616,8 @@ watch(modelValue, () => {
 	cursor: grab;
 	display: flex;
 	scroll-snap-type: x proximity;
+	height: 100%;
+	width: 100%;
 
 	&.snap {
 		scroll-snap-type: x mandatory;
