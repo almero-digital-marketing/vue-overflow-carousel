@@ -22,13 +22,13 @@
 				['has-next']: hasNext,
 			}" 
 			ref="component"
-			v-drag-scroll.x="mouse && !disabled" 
 			@scroll="onScroll"
 			@mousewheel="onMouseWheel" 
 			@mousedown="onMouseDown" 
 			@mouseup="onMouseUp" 
 			@mousemove="onMouseMove"
 			@mouseleave="onMouseLeave"
+			@mouseenter="onMouseEnter"
 			@touchstart="onTouchStart">
 			<div class="track" ref="track">
 				<slot :scroller="component" :active="active" :progress="progress" :scrollDirection="scrollDirection"></slot>
@@ -50,7 +50,6 @@
 </template>
 <script setup>
 import { ref, onMounted, onUnmounted, toRefs, watch, onBeforeUnmount, provide, computed, nextTick } from 'vue'
-import vDragScroll from 'vue-dragscroll/src/directive-next'
 import debounce from 'debounce'
 import { waitForScrollEnd } from '../lib/scrolling'
 import { gsap } from 'gsap'
@@ -123,6 +122,10 @@ const { modelValue, captureScroll, center, duration, gap, slideGap, trackGap, ce
 const component = ref(null)
 const track = ref(null)
 const grabbing = ref(false)
+const grabState = ref({
+	x: 0,
+	y: 0
+})
 const mouse = ref(!!!('ontouchstart' in window))
 const width = ref(0)
 const height = ref(0)
@@ -139,61 +142,12 @@ const hasNext = ref(false)
 
 function next(count, force) {
 	toggleSnap(false)
-	if (component.value.scrollWidth - component.value.scrollLeft - component.value.clientWidth <= 101 && !force) {
-		return new Promise(resolve => {
-			gsap.timeline({
-				onComplete: resolve
-			})
-			.to(component.value, {
-				scrollTo: { 
-					x: 'max', 
-					autoKill: true, 
-				}, 
-				ease: "power2",
-				duration: .4,
-			})
-			.to(component.value, {
-				scrollTo: { 
-					x: 'max', 
-					autoKill: true, 
-					offsetX: 100,
-				}, 
-				ease: "power2",
-				duration: .4,
-			})				
-		})
-	} else {	
-		return goTo(active.value + (count || 1))
-	}
+	return goTo(active.value + (count || 1), force)
 }
 
 function prev(count, force) {
 	toggleSnap(false)
-	if (component.value.scrollLeft <= 101 && !force) {
-		return new Promise(resolve => {
-			gsap.timeline({
-				onComplete: resolve
-			})
-			.to(component.value, {
-				scrollTo: { 
-					x: 0, 
-					autoKill: true, 
-				}, 
-				ease: "power2",
-				duration: .4,
-			})
-			.to(component.value, {
-				scrollTo: { 
-					x: 100, 
-					autoKill: true, 
-				}, 
-				ease: "power2",
-				duration: .4,
-			})				
-		})
-	} else {
-		return goTo(active.value - (count || 1), force)
-	}
+	return goTo(active.value - (count || 1), force)
 }
 
 defineExpose({ 
@@ -334,45 +288,50 @@ function goTo(index, force) {
 		if (goToIndex == index) return
 		goToIndex = index
 	
-		const syncModel = async () => {
-			updateNavigation()
-	
-			if (modelValue.value != null && modelValue.value != goToIndex) {
-				await goTo(modelValue.value)
-			}
-			enforceBounds()
-			resolve()
-		}
-	
-		if (center.value || 
-			(_centerFirst.value && index == 0) || 
-			(!_offsetLast.value && (_centerLast.value || index == total - 1))
-		) {
-			let offsetX = (component.value.clientWidth - element?.clientWidth) / 2
+		hasPrev.value = goToIndex > 0
+		hasNext.value = goToIndex < elements.length - 1
+
+		let offsetX = 0
+		let x = element
+		let endOffset = component.value.scrollWidth - 200 - element.offsetLeft - element.offsetWidth
+		let minOffset = 0
+		if (center.value) {
+			let minOffset = (width.value - element?.clientWidth) / 2
+			offsetX = minOffset
 			if (!_centerFirst.value && index == 0) offsetX = 0
-			debug.value && console.log('Go to 1:', index, force)
-			gsap.to(component.value, {
-				scrollTo: { 
-					x: element, 
-					autoKill: true, 
-					offsetX,
-				}, 
-				ease: "power2",
-				duration: force ? 0 : duration.value,
-				onComplete: syncModel
-			})
+			else if (!_centerLast.value) {
+				minOffset = width.value / 2 - element.offsetWidth
+			}
 		} else {
-			debug.value && console.log('Go to 2:', index, force)
-			gsap.to(component.value, { 
-				scrollTo: {
-					autoKill: true,  
-					x: element,
-				}, 
-				ease: "power2",
-				duration: force ? 0 : duration.value ,
-				onComplete: syncModel
-			})
+			if (!_offsetLast.value) {
+				minOffset = width.value - element.offsetWidth
+			}
 		}
+
+		if (endOffset < minOffset) {
+			x = 'max'
+			offsetX = 100
+			hasNext.value = false
+		}
+
+		gsap.to(component.value, { 
+			scrollTo: {
+				autoKill: true,  
+				x,
+				offsetX
+			}, 
+			ease: "power2",
+			duration: force ? 0 : duration.value,
+			onComplete: async () => {
+				updateNavigation()
+		
+				if (modelValue.value != null && modelValue.value != goToIndex) {
+					await goTo(modelValue.value, force)
+				}
+				enforceBounds(force)
+				resolve()
+			}
+		})
 	})
 }
 
@@ -483,29 +442,65 @@ function onMouseWheel(e) {
 	}, 200)
 }
 
-function onMouseMove() {
-	if (disabled.value) return
-
+function onMouseMove(e) {
 	toggleFocus()
+
+	if (grabbing.value) {
+		let deltaX = grabState.value.x - e.screenX
+		if (!grabState.value.direction) {
+			let deltaY = grabState.value.y - e.screenY
+			if (Math.abs(deltaX) > Math.abs(deltaY)) {
+				grabState.value.direction = 'horizontal'
+				e.stopPropagation()
+			} else {
+				grabState.value.direction = 'vertical'
+			}
+		}
+	
+		if (grabState.value.direction == 'horizontal') {
+			grabState.value.x = e.screenX
+			component.value.scrollBy(deltaX, 0)
+			e.preventDefault()
+		}
+	}
 }
 
-function onMouseDown() {
+function onMouseEnter() {
+	if (grabbing.value) {
+		grabbing.value = false
+		toggleGrab()
+	}
+}
+
+let grabbingTimeout
+function onMouseDown({ screenX, screenY }) {
 	if (disabled.value) return
+	grabbingTimeout = setTimeout(() => {
+		grabbing.value = true
+	}, 50)
 
 	toggleSnap(false)
-	toggleGrab(true)
+
+	grabState.value = {
+		x: screenX,
+		y: screenY
+	}
 }
 
 function onMouseUp() {
+	clearTimeout(grabbingTimeout)
+	grabbing.value = false
 	if (disabled.value) return
+	grabState.value = {}
 
-	toggleGrab(false)
+	toggleGrab()
 }
 
 function onMouseLeave() {
+	grabbing.value = false
+	clearTimeout(grabbingTimeout)
 	if (disabled.value) return
-
-	toggleGrab(false)
+	toggleGrab()
 }
 
 function onTouchStart() {
@@ -515,10 +510,8 @@ function onTouchStart() {
 	toggleFocus()
 }
 
-function toggleGrab(value) {
-	if (grabbing.value == value) return
+function toggleGrab() {
 	if (mouse.value) {
-		grabbing.value = value
 		if (!grabbing.value) {
 			goToIndex = -1
 			const current = getActive()
@@ -533,7 +526,7 @@ function calcProgress() {
 	emit('progress', progress.value)
 }
 
-function enforceBounds() {
+function enforceBounds(force) {
 	debug.value && console.log('Enforce bounds:', progress.value)
 
 	if (!mouse.value) return
@@ -545,7 +538,7 @@ function enforceBounds() {
 				offsetX: 100,
 			}, 
 			ease: "power2",
-			duration: .4,
+			duration: force ? 0 : .4,
 		})
 	} 
 	else if (progress.value < 0) {
@@ -555,7 +548,7 @@ function enforceBounds() {
 				autoKill: true, 
 			}, 
 			ease: "power2",
-			duration: .4,
+			duration: force ? 0 : .4,
 		})
 	} 
 }

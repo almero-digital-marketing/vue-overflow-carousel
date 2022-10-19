@@ -118,8 +118,8 @@
       <template #overlay="navigation">
         <div class="wheel">
           <div class="circle">{{ navigation.progress }}</div>
-          <button @click="navigation.prev()">Prev</button>
-          <button @click="navigation.next(2)">Next</button>
+          <button @click="navigation.prev()" :disabled="!navigation.hasPrev">Prev</button>
+          <button @click="navigation.next()" :disabled="!navigation.hasNext">Next</button>
         </div>
       </template>
       <template v-slot="carousel">
@@ -306,7 +306,7 @@ body {
   border: 1px solid black;
   position: absolute;
   height: 100%;
-  width: 70vw;
+  width: 100%;
   background-color: rgba(0,0,0,.05);
 }
 .carousel-2 .active .slide {

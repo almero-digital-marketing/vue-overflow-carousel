@@ -25,6 +25,7 @@ onMounted(toggleActive)
     padding-left: var(--track-gap);
     flex-shrink: 0;
     flex-grow: 0;
+    user-select: none;
 
     .snap & {
         scroll-snap-align: start;
