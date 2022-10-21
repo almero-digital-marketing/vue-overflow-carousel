@@ -55,7 +55,7 @@
     </Slide>
   </Carousel>
   <div class="markers">
-    <Carousel class="carousel-2" :capture-scroll="true" :center="true" slide-gap="100px" track-gap="200px" v-model="active" :overlay="true" >
+    <Carousel class="carousel-2" :capture-scroll="true" :center="true" track-gap="200px" v-model="active" :overlay="true" >
       <template #overlay="overlay">
         <div class="wheel">
           <div class="circle">{{ overlay.progress }}</div>
@@ -105,7 +105,9 @@
           13. Ad adhuc propriae cum. Cotidieque omittantur complectitur ei nam, cibo scripta quaeque mea at. Te aliquam impedit sensibus pro, debet erroribus eos ad, ei usu insolens elaboraret referrentur. Etiam utroque definitiones eu mel.
         </Slide>
         <Slide>
-          14. Ex vel hinc latine interpretaris, te veritus blandit eum, fabellas perpetua inciderint te eos. Sed scaevola lobortis ne, everti definitionem ad pro. Ut copiosae explicari elaboraret usu, nam at copiosae accusata. Ea pri mucius insolens. Qui adhuc denique te, id sensibus mandamus quo.
+          <div class="small">
+            14. Ex vel hinc latine interpretaris, te veritus blandit eum, fabellas perpetua inciderint te eos. Sed scaevola lobortis ne, everti definitionem ad pro. Ut copiosae explicari elaboraret usu, nam at copiosae accusata. Ea pri mucius insolens. Qui adhuc denique te, id sensibus mandamus quo.
+          </div>
         </Slide>
       </template>
     </Carousel>
@@ -230,13 +232,32 @@
       </template>
     </Carousel>
   </div>
-  
-
+  <br><br><br><br>
+  <button @click="addSegments">Add</button>
+  <wheel ref="carousel">
+    <segment v-for="(segment, index) of segments" v-slot="item" :key="index" :style="{
+        width: segment.width + 'px',
+        height: segment.height + 'px'
+    }">
+        {{ index }} <strong>{{item.active}} {{item.progress}}</strong> {{ item.info }}
+    </segment>
+  </wheel>
+  <br><br><br><br>
+  <deck ref="carousel">
+      <segment v-for="(segment, index) of segments" v-slot="item" :key="index">
+          <div class="box">
+              {{ index }} <strong>{{item.active}} {{item.progress}}</strong> {{ item.info }}
+          </div>
+      </segment>
+  </deck>  
 </template>
 <script setup>
 import { ref } from 'vue'
 import Carousel from './components/Carousel.vue'
 import Slide from './components/Slide.vue'
+import Segment from './components/Segment.vue'
+import Wheel from './components/Wheel.vue'
+import Deck from './components/Deck.vue'
 
 const active = ref(0)
 const navigation = ref(0)
@@ -245,6 +266,20 @@ function test(e) {
   if (e.defaultPrevented) return
   console.log('TEST', e.defaultPrevented, Date.now())
 }
+
+const segmentValues = Array.from(new Array(10), () => {
+    return {
+        width: 320,
+        height: 240 + Math.random() * 320,
+    }
+})
+const segments = ref(segmentValues)
+const carousel = ref(null)
+
+function addSegments() {
+    segments.value.push(...segmentValues)
+}
+
 </script>
 
 <style>
@@ -287,6 +322,7 @@ body {
   left: 50%;
   z-index: 10;
 }
+
 .carousel-2 .slide {
   border: 1px solid green;
   min-height: 300px;
@@ -295,14 +331,14 @@ body {
   transition: all 1s;
   z-index: 1;
 }
-.wheel {
+.carousel-2 .wheel {
   position: sticky;
   left: 0;
   z-index: 2;
   min-height: 300px;
   width: 1px;
 }
-.circle {
+.carousel-2 .circle {
   border: 1px solid black;
   position: absolute;
   height: 100%;
@@ -348,5 +384,66 @@ body {
 }
 body {
   padding-bottom: 200vh;
+}
+</style>
+<style lang="less">
+.wheel .circle {
+    border: 1px solid green;
+}
+.wheel .circle::before {
+    border: 1px solid green;
+}
+.wheel {
+    width: 80vw;
+    margin: 0 auto;
+    border: 1px solid blue;
+}
+.slide .item {
+    box-shadow: 0 0 0 1px darkgrey;
+    // border: 1px solid lightgrey;
+}
+.wheel .segment {
+    width: 240px;
+    height: 480px;
+    background-color: rgba(0,0,0,.1);
+
+    &.active {
+        background-color: orange;
+    }
+}
+.view {
+    border: 2px solid pink;
+}
+.info {
+    position: absolute;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.deck {
+    padding: 40px 0;
+    width: 50vw;
+    margin: 0 auto;
+    border: 1px solid blue;
+    .segment {
+        width: 300px;
+        height: 360px;
+    }
+}
+.box {
+    transition: background-color .2s;
+    background-color: burlywood;
+    width: 240px;
+    position: absolute;
+    left: calc(50% - 120px);
+    .active & {
+        background-color: orange;
+    }
+    height: 100%;
+    transform: 
+      translateX(calc(10vw - 10vw * var(--progress-card-in)))
+      translateX(calc(-75vw * var(--progress-card-out))) 
+      rotate(calc(15deg - 15deg * var(--progress-card-in)))
+      rotate(calc(-10deg * var(--progress-card-out)));
 }
 </style>

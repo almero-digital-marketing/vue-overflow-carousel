@@ -298,9 +298,8 @@ function goTo(index, force) {
 			}
 		}
 
-		if (endOffset < minOffset) {
-			const active = getActive()
-			if (active > index) {
+		if (endOffset < minOffset && !_offsetLast.value && !_centerLast.value) {
+			if (active.value > index) {
 				return goTo(index - 1, force).then(resolve)
 			}
 			x = 'max'
@@ -321,8 +320,7 @@ function goTo(index, force) {
 			duration: force ? 0 : duration.value,
 			onComplete: async () => {
 				updateNavigation()
-				const active = getActive()
-				if (modelValue.value != null && modelValue.value != active) {
+				if (modelValue.value != null && modelValue.value != active.value) {
 					await goTo(modelValue.value, force)
 				}
 				enforceBounds(force)
@@ -448,22 +446,11 @@ function onMouseWheel(e) {
 function onMouseMove(e) {
 	toggleFocus()
 
+	let deltaX = grabState.value.x - e.screenX
 	if (grabbing.value) {
-		let deltaX = grabState.value.x - e.screenX
-		if (!grabState.value.direction) {
-			let deltaY = grabState.value.y - e.screenY
-			if (Math.abs(deltaX) > Math.abs(deltaY)) {
-				grabState.value.direction = 'horizontal'
-				e.stopPropagation()
-			} else {
-				grabState.value.direction = 'vertical'
-			}
-		}
-	
-		if (grabState.value.direction == 'horizontal') {
+		if (deltaX != 0) {
 			grabState.value.x = e.screenX
 			component.value.scrollBy(deltaX, 0)
-			e.preventDefault()
 		}
 	}
 }
@@ -573,9 +560,9 @@ function onScroll() {
 
 	calcProgress()
 
+	active.value = getActive()
 	if (!scrolling) {
 		scrolling = waitForScrollEnd(component.value).then(() => {
-			active.value = getActive()
 			if (window.scrollCarouselId == componentId) {
 				emit('change', active.value)
 				emit('update:modelValue', active.value)
