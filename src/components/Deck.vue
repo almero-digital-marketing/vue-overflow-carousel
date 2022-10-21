@@ -69,7 +69,9 @@ function onProgress(progress) {
             overwrite: true
         }
 
-        if (progress > info.value[index].start && progress <= info.value[index].end || progress < 0 && index == 0) {
+        if (progress > info.value[index].start && progress <= info.value[index].end || 
+            progress < 0 && index == 0 ||
+            progress > 1 && index == segments.length.length - 1) {
             cardProggress = (progress - info.value[index].start) / (info.value[index].end - info.value[index].start)
         } else if ( progress > info.value[index].end) {
             cardProggress = 1
@@ -117,8 +119,8 @@ function updateLayout() {
         info.value[index].end = stickiness + stick
         stickiness += stick
     }
-    info.value[segments.length - 1].start = stickiness
-    info.value[segments.length - 1].end = stickiness + 200 / segmentsWidth
+    info.value[segments.length - 1].start = 1
+    info.value[segments.length - 1].end = 1 + segments[segments.length - 1].offsetWidth / segmentsWidth
 
 }
 
