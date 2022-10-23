@@ -1,5 +1,5 @@
 <template>
-	<div class="carousel">
+	<div class="carousel focus-manager">
 		<div class="scroller" 
 			:style="{
 				['--margin-first']: marginFirst + 'px',
@@ -52,6 +52,7 @@
 import { ref, onMounted, onUnmounted, toRefs, watch, onBeforeUnmount, provide, computed, nextTick } from 'vue'
 import debounce from 'debounce'
 import { waitForScrollEnd } from '../lib/scrolling'
+import { useFocusManager } from '../lib/focus-manager'
 import { gsap } from 'gsap'
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
 gsap.registerPlugin(ScrollToPlugin)
@@ -115,9 +116,8 @@ const props = defineProps({
 	}
 })
 
-const componentId = Date.now()
-
 const { modelValue, captureScroll, center, duration, gap, slideGap, trackGap, centerFirst, centerLast, snap, offsetLast, debug } = toRefs(props)
+const { hasFocus, toggleFocus } = useFocusManager()
 
 const component = ref(null)
 const track = ref(null)
@@ -138,7 +138,7 @@ const progress = ref(0)
 const scrollDirection = ref(0)
 
 const hasPrev = ref(false)
-const hasNext = ref(false)
+const hasNext = ref(true)
 
 function next(count, force) {
 	toggleSnap(false)
@@ -176,22 +176,6 @@ let semaphor = true
 let lastScrollLeft = 0
 let semaphorTimeout
 
-function toggleFocus({ target } = {}) {
-	if (target) {
-		if (window.scrollCarouselId != 0 && !target.classList.contains('craousel') && !target.closest('.carousel')) {
-			window.scrollCarouselId = 0
-		}
-	} else {
-		window.scrollCarouselId = componentId
-	}
-}
-
-window.addEventListener('touchstart', toggleFocus)
-onUnmounted(() => window.removeEventListener('touchstart', toggleFocus))
-
-window.addEventListener('mousedown', toggleFocus)
-onUnmounted(() => window.removeEventListener('mousedown', toggleFocus))
-
 function updateLayout() {
 	if (!component.value) return
 
@@ -224,18 +208,7 @@ function updateLayout() {
 		marginLast.value = 0
 	}
 
-	updateNavigation()
-
 	emit('layout', !disabled.value)
-
-	calcProgress()
-}
-
-function updateNavigation() {
-	if (component.value) {
-		hasNext.value = component.value.scrollWidth - component.value.scrollLeft - width.value > 100
-		hasPrev.value = component.value.scrollLeft > 100
-	}
 }
 
 let resizeObserver = new ResizeObserver(debounce(() => {
@@ -319,7 +292,11 @@ function goTo(index, force) {
 			ease: "power2",
 			duration: force ? 0 : duration.value,
 			onComplete: async () => {
-				updateNavigation()
+				if (!component.value) return
+
+				hasNext.value = component.value.scrollWidth - component.value.scrollLeft - width.value > 100
+				hasPrev.value = component.value.scrollLeft > 100
+
 				if (modelValue.value != null && modelValue.value != active.value) {
 					await goTo(modelValue.value, force)
 				}
@@ -417,10 +394,9 @@ function move(direction) {
 }
 
 let spinning
-let wheelMoving
 function onMouseWheel(e) {
 	if (!component.value || disabled.value) return
-	window.scrollCarouselId = componentId
+	toggleFocus()
 	if (!captureScroll.value || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
 
 	mouse.value = true
@@ -515,11 +491,6 @@ function toggleGrab() {
 	}
 }
 
-function calcProgress() {
-	progress.value = (component.value.scrollLeft - 100) / (component.value.scrollWidth - component.value.offsetWidth - 200)
-	emit('progress', progress.value)
-}
-
 function enforceBounds(force) {
 	debug.value && console.log('Enforce bounds:', progress.value)
 
@@ -558,12 +529,13 @@ function onScroll() {
 	}
 	lastScrollLeft = component.value.scrollLeft
 
-	calcProgress()
+	progress.value = (component.value.scrollLeft - 100) / (component.value.scrollWidth - component.value.offsetWidth - 200)
+	emit('progress', progress.value)
 
 	active.value = getActive()
 	if (!scrolling) {
 		scrolling = waitForScrollEnd(component.value).then(() => {
-			if (window.scrollCarouselId == componentId) {
+			if (hasFocus()) {
 				emit('change', active.value)
 				emit('update:modelValue', active.value)
 			}
@@ -573,7 +545,7 @@ function onScroll() {
 }
 
 watch(modelValue, () => {
-	if (window.scrollCarouselId != componentId || !scrolling) {
+	if (!hasFocus() || !scrolling) {
 		if (modelValue.value < 0) {
 			emit("update:modelValue", 0)
     	} else if (modelValue.value > total - 1){
