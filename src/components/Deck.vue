@@ -77,8 +77,13 @@ function onProgress(progress) {
             cardProggress = 1
         }
 
+        info.value[index].outProgress = cardProggress
         inOutAnimations[index]['--progress-card-out'] = cardProggress
+        if (index == 0) {
+            info.value[index].inProgress = 1
+        }
         if (index < segments.length - 1) {
+            info.value[index + 1].inProgress = cardProggress
             inOutAnimations[index + 1] = {
                 overwrite: true,
                 '--progress-card-in': cardProggress

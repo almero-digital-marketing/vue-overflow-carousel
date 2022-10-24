@@ -49,7 +49,7 @@
 	</div>
 </template>
 <script setup>
-import { ref, onMounted, onUnmounted, toRefs, watch, onBeforeUnmount, provide, computed, nextTick } from 'vue'
+import { ref, onMounted, toRefs, watch, onBeforeUnmount, provide, computed, nextTick } from 'vue'
 import debounce from 'debounce'
 import { waitForScrollEnd } from '../lib/scrolling'
 import { useFocusManager } from '../lib/focus-manager'

@@ -239,14 +239,14 @@
         width: segment.width + 'px',
         height: segment.height + 'px'
     }">
-        {{ index }} <strong>{{item.active}} {{item.progress}}</strong> {{ item.info }}
+        {{ index }} <strong>{{item.active}}</strong> {{ item }}
     </segment>
   </wheel>
   <br><br><br><br>
   <deck ref="carousel">
       <segment v-for="(segment, index) of segments" v-slot="item" :key="index">
           <div class="box">
-              {{ index }} <strong>{{item.active}} {{item.progress}}</strong> {{ item.info }}
+              {{ index }} <strong>{{item.active}}</strong> {{item}}
           </div>
       </segment>
   </deck>  
