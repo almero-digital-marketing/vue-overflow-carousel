@@ -442,8 +442,8 @@ body {
     height: 100%;
     transform: 
       translateX(calc(10vw - 10vw * var(--progress-card-in)))
-      translateX(calc(-75vw * var(--progress-card-out))) 
       rotate(calc(15deg - 15deg * var(--progress-card-in)))
+      translateX(calc(-75vw * var(--progress-card-out))) 
       rotate(calc(-10deg * var(--progress-card-out)));
 }
 </style>
