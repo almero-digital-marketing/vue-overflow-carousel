@@ -92,4 +92,9 @@ onMounted(toggleActive)
         }
     }
 }
+.slide {
+    :deep(img, video) {
+        pointer-events: none;
+    }
+}
 </style>

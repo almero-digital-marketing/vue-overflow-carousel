@@ -64,6 +64,7 @@
       <template v-slot="carousel">
         <Slide>
           0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim.
+          <img src="https://thumbs.dreamstime.com/b/cute-grey-cat-glasses-wood-background-178508562.jpg">
         </Slide>
         <Slide>
           1. Qui et assum labore assueverit. Corpora suscipiantur sit et. Fugit oblique torquatos et vel. Cu eos hinc volumus, duis nusquam corrumpit id has. Te ius debet propriae splendide.
@@ -234,7 +235,11 @@
   </div>
   <br><br><br><br>
   <button @click="addSegments">Add</button>
-  <wheel ref="carousel">
+  <wheel :overlay="true">
+    <template #overlay="navigation">
+      <button @click="navigation.prev()" :disabled="!navigation.hasPrev">Prev</button>
+      <button @click="navigation.next()" :disabled="!navigation.hasNext">Next</button>
+    </template>
     <segment v-for="(segment, index) of segments" v-slot="item" :key="index" :style="{
         width: segment.width + 'px',
         height: segment.height + 'px'
@@ -243,12 +248,16 @@
     </segment>
   </wheel>
   <br><br><br><br>
-  <deck ref="carousel">
-      <segment v-for="(segment, index) of segments" v-slot="item" :key="index">
-          <div class="box">
-              {{ index }} <strong>{{item.active}}</strong> {{item}}
-          </div>
-      </segment>
+  <deck :overlay="true">
+    <template #overlay="navigation">
+      <button @click="navigation.prev()" :disabled="!navigation.hasPrev">Prev</button>
+      <button @click="navigation.next()" :disabled="!navigation.hasNext">Next</button>
+    </template>
+    <segment v-for="(segment, index) of segments" v-slot="item" :key="index">
+        <div class="box">
+            {{ index }} <strong>{{item.active}}</strong> {{item}}
+        </div>
+    </segment>
   </deck>  
 </template>
 <script setup>
@@ -274,8 +283,6 @@ const segmentValues = Array.from(new Array(10), () => {
     }
 })
 const segments = ref(segmentValues)
-const carousel = ref(null)
-
 function addSegments() {
     segments.value.push(...segmentValues)
 }
@@ -288,6 +295,9 @@ body {
 }
 * {
   box-sizing: border-box;
+}
+img {
+  width: 100%;
 }
 .track::before,
 .track::after {

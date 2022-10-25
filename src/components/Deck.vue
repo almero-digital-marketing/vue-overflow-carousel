@@ -10,11 +10,29 @@
             :duration="duration"
             @progress="onProgress"
         >
-            <template #overlay>
+            <template #overlay="navigation">
                 <div class="view">
                     <div class="cards" ref="card">
-                        <slot></slot>
+                        <slot 
+                            :scroller="navigation.scroller" 
+                            :active="navigation.active" 
+                            :progress="navigation.progress" 
+                            :scrollDirection="navigation.scrollDirection"
+                        ></slot>
                     </div>
+                </div>
+                <div class="controls" v-if="overlay">
+                    <slot 
+                        name="overlay" 
+                        :scroller="navigation.scroller" 
+                        :active="navigation.active" 
+                        :progress="navigation.progress" 
+                        :scrollDirection="navigation.scrollDirection" 
+                        :next="navigation.next" 
+                        :prev="navigation.prev" 
+                        :hasPrev="navigation.hasPrev"
+                        :hasNext="navigation.hasNext"
+                    ></slot>
                 </div>
             </template>
             <slide v-for="(item, index) in info" :key="index">
@@ -39,6 +57,10 @@ const props = defineProps({
       type: Boolean,
       default: true,
     },
+	overlay: {
+      type: Boolean,
+      default: false,
+    },
     items: {
         type: Array,
         default: []
@@ -60,6 +82,8 @@ defineExpose({
 })
 
 function onProgress(progress) {
+    if (!component.value) return
+    
     const segments = Array.from(component.value.getElementsByClassName('segment'))
     const inOutAnimations = []
     for (let index = 0; index < segments.length; index++) {

@@ -215,6 +215,8 @@ let resizeObserver = new ResizeObserver(debounce(() => {
 	updateLayout()
 	if (modelValue.value != null) {
 		goTo(modelValue.value || 0, true)
+	} else {
+		goTo(0, true)
 	}
 }, 100))
 onMounted(() => {

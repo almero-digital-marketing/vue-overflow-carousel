@@ -31,3 +31,10 @@ function toggleActive() {
 watch(activeIndex, toggleActive)
 onMounted(toggleActive)
 </script>
+<style lang="less" scoped>
+.segment {
+    :deep(img, video) {
+        pointer-events: none;
+    }
+}
+</style>
