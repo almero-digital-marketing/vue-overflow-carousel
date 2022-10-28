@@ -151,7 +151,10 @@ function prev(count, force) {
 }
 
 defineExpose({ 
-	goTo,
+	goTo(index, force) {
+		goToIndex = -1
+		goTo(index, force)
+	},
 	next,
 	prev,
 })
@@ -249,7 +252,7 @@ function goTo(index, force) {
 		const elements = component.value.querySelectorAll('.track .placeholder')
 		if (!elements.length) return
 	
-		index = Math.min(Math.max(index, 0), total - 1)
+		index = Math.min(Math.max(index, 0), elements.length - 1)
 		const element = elements[index]
 		if (goToIndex == index) return
 	

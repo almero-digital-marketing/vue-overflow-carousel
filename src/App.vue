@@ -117,7 +117,7 @@
 
 
   <div class="markers">
-    <Carousel class="carousel-2" ref="navigation" :capture-scroll="true" :center="false" :center-first="false" :center-last="false" slide-gap="100px" track-gap="200px" :overlay="true" :snap="false" :debug="true">
+    <Carousel class="carousel-2" ref="carousel" :capture-scroll="true" :center="false" :center-first="false" :center-last="false" slide-gap="100px" track-gap="200px" :overlay="true" :snap="false" :debug="true">
       <template #overlay="navigation">
         <div class="wheel">
           <div class="circle">{{ navigation.progress }}</div>
@@ -269,7 +269,7 @@ import Wheel from './components/Wheel.vue'
 import Deck from './components/Deck.vue'
 
 const active = ref(0)
-const navigation = ref(0)
+const carousel = ref(null)
 
 function test(e) {
   if (e.defaultPrevented) return
