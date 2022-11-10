@@ -21,6 +21,7 @@ watch(activeIndex, toggleActive)
 onMounted(toggleActive)
 </script>
 <style lang="less" scoped>
+
 .placeholder {
     padding-left: var(--track-gap);
     flex-shrink: 0;
@@ -28,17 +29,23 @@ onMounted(toggleActive)
     user-select: none;
 
     .snap & {
-        scroll-snap-align: start;
+        .slide {
+            scroll-snap-align: start;
+        }
     }
 
     &:first-child {
-        scroll-snap-align: start;
         padding-left: var(--track-gap);
+        .slide {
+            scroll-snap-align: start;
+        }
     }
     &:last-child {
-        scroll-snap-align: end;
         margin-right: 0;
         padding-right: calc(var(--track-gap));
+        .slide {
+            scroll-snap-align: end;
+        }
     }
     &:not(:first-child) {
         padding-left: var(--slide-gap);
@@ -55,7 +62,9 @@ onMounted(toggleActive)
         &:not(:first-child):not(:last-child) {
             padding-left: 0;
             margin-left: 0;
-            scroll-snap-align: center;
+            .slide {
+                scroll-snap-align: center;
+            }
         }
         &:not(:first-child) {
             padding-left: unset;
@@ -64,25 +73,31 @@ onMounted(toggleActive)
 
     .center-first & {
         &:first-child {
-            scroll-snap-align: center;
             padding-left: unset;
             margin-left: calc(var(--margin-first) - var(--slide-gap));
+            .slide {
+                scroll-snap-align: center;
+            }
         }
 	}
 
     .center-last & {
         &:last-child {
-            scroll-snap-align: center;
             margin-right: calc(var(--margin-last) - var(--slide-gap));
             padding-right: unset;
+            .slide {
+                scroll-snap-align: center;
+            }
         }
     }
 
     .offset-last & {
         &:last-child {
-            scroll-snap-align: start;
-            margin-right: var(--margin-last);
+            margin-right: calc(var(--margin-last) + var(--slide-gap));
             padding-right: unset;
+            .slide {
+                scroll-snap-align: start;
+            }
         }
     }
 

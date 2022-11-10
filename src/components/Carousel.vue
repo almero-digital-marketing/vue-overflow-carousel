@@ -260,7 +260,7 @@ function goTo(index, force) {
 		hasNext.value = index < elements.length - 1
 
 		let offsetX = 0
-		let x = element
+		let x = element.querySelector('.slide')
 		let endOffset = component.value.scrollWidth - 200 - element.offsetLeft - element.offsetWidth
 		let minOffset = 0
 		if (center.value) {
