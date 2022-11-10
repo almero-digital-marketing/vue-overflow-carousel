@@ -96,7 +96,7 @@ const props = defineProps({
     },
 	duration: {
       type: Number,
-      default: .6,
+      default: .4,
     },
 	slidesPerPage: {
 		type: Number,
@@ -288,6 +288,11 @@ function goTo(index, force) {
 			goToIndex = index
 		}
 		
+		if (_trackGap.value) {
+			if (index == 0 || index == elements.length - 1) {
+				x = element
+			}
+		}
 		gsap.to(component.value, { 
 			scrollTo: {
 				autoKill: true,  
@@ -328,7 +333,7 @@ function getActive() {
 	const viewportCenter = width.value / 2
 	let initialStep = step
 	if (component.value.scrollLeft) {
-		const elements = component.value.querySelectorAll('.track .placeholder')
+		const elements = component.value.querySelectorAll('.track .placeholder .slide')
 		if (!elements.length) return
 
 		const firstElement = elements[0]
@@ -426,7 +431,6 @@ function onMouseWheel(e) {
 
 function onMouseMove(e) {
 	toggleFocus()
-
 	let deltaX = grabState.value.x - e.screenX
 	if (grabbing.value) {
 		if (deltaX != 0) {
@@ -441,8 +445,8 @@ function onMouseEnter() {
 		grabbing.value = false
 		toggleGrab()
 	}
-
     semaphorTimeout = setTimeout(() => semaphor = true, 200)
+
 }
 
 let grabbingTimeout
@@ -470,10 +474,12 @@ function onMouseUp() {
 }
 
 function onMouseLeave() {
-	grabbing.value = false
 	clearTimeout(grabbingTimeout)
 	if (disabled.value) return
-	toggleGrab()
+	if (grabbing.value) {	
+		grabbing.value = false
+		toggleGrab()
+	}
 
     clearTimeout(semaphorTimeout)
 	semaphor = false
@@ -570,6 +576,9 @@ watch(modelValue, () => {
 	--carousel-height: calc(1px * v-bind(height));
 
 	position: relative;
+	flex-shrink: 1;
+	flex-grow: 1;
+	display: flex;
 }
 .scroller {
 	--slide-gap: v-bind(_slideGap);

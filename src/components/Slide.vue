@@ -36,15 +36,17 @@ onMounted(toggleActive)
 
     &:first-child {
         padding-left: var(--track-gap);
+        scroll-snap-align: start;
         .slide {
-            scroll-snap-align: start;
+            scroll-snap-align: unset;
         }
     }
     &:last-child {
         margin-right: 0;
         padding-right: calc(var(--track-gap));
+        scroll-snap-align: end;
         .slide {
-            scroll-snap-align: end;
+            scroll-snap-align: unset;
         }
     }
     &:not(:first-child) {
@@ -54,10 +56,12 @@ onMounted(toggleActive)
     .center & {
         &:first-child {
             margin-left: calc(-1 * var(--slide-gap));
+            scroll-snap-align: unset;
         }
         &:last-child {
             padding-right: calc(1 * var(--track-gap));
             margin-right: 0;
+            scroll-snap-align: unset;
         }
         &:not(:first-child):not(:last-child) {
             padding-left: 0;
@@ -95,9 +99,7 @@ onMounted(toggleActive)
         &:last-child {
             margin-right: calc(var(--margin-last) + var(--slide-gap));
             padding-right: unset;
-            .slide {
-                scroll-snap-align: start;
-            }
+            scroll-snap-align: start;
         }
     }
 
