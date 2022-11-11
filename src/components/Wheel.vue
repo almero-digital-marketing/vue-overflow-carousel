@@ -45,7 +45,7 @@
     </div>
 </template>
 <script setup>
-import { ref, toRefs, onMounted, watch, provide, onBeforeUnmount } from 'vue'
+import { ref, toRefs, onMounted, watch, provide, onBeforeUnmount, nextTick } from 'vue'
 import Carousel from './Carousel.vue'
 import Slide from './Slide.vue'
 import Segment from './Segment.vue'
@@ -143,9 +143,11 @@ function updateLayout() {
 
 let mutationObserver = new MutationObserver(debounce(updateLayout, 100))
 onMounted(() => {
-    updateLayout()
-    mutationObserver.observe(circle.value, {
-        childList: true
+    nextTick(() => {
+        updateLayout()
+        mutationObserver.observe(circle.value, {
+            childList: true
+        })
     })
 })
 watch(radius, updateLayout)

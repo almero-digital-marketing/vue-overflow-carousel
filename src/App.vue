@@ -115,15 +115,16 @@
   </div>
 
 
-
+  {{ carousel?.hasPrev }}
   <div class="markers">
     <Carousel class="carousel-2" 
       ref="carousel" 
       :capture-scroll="true" 
       :center="false" 
       :center-first="false" 
-      :center-last="false" 
+      :offset-last="true" 
       slide-gap="100px" 
+      track-gap="200px"
       :overlay="true" 
       :debug="true" 
       auto-size="var(--auto-size)"

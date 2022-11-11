@@ -99,7 +99,10 @@ onMounted(toggleActive)
         &:last-child {
             margin-right: calc(var(--margin-last) + var(--slide-gap));
             padding-right: unset;
-            scroll-snap-align: start;
+            scroll-snap-align: unset;
+            .slide {
+                scroll-snap-align: start;
+            }
         }
     }
 

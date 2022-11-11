@@ -162,6 +162,8 @@ defineExpose({
 	},
 	next,
 	prev,
+	hasPrev,
+	hasNext
 })
 
 function normalizeUnits(value) {
@@ -234,9 +236,11 @@ const onResize = () => {
 }
 let resizeObserver = new ResizeObserver(debounce(onResize, 200))
 onMounted(() => {
-	resizeObserver.observe(component.value)
-	resizeObserver.observe(track.value)
-	nextTick(updateLayout)
+	nextTick(() => {
+		resizeObserver.observe(component.value)
+		resizeObserver.observe(track.value)
+		updateLayout()
+	})
 })
 onBeforeUnmount(() => {
 	resizeObserver.disconnect()
@@ -299,11 +303,10 @@ function goTo(index, force) {
 			goToIndex = index
 		}
 		
-		if (_trackGap.value) {
-			if (index == 0 || (index == elements.length - 1 && _offsetLast.value)) {
-				x = element
-			}
+		if (_trackGap.value && index == 0) {
+			x = element
 		}
+
 		gsap.to(component.value, { 
 			scrollTo: {
 				autoKill: true,  
