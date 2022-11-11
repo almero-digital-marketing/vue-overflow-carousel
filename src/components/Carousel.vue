@@ -11,6 +11,7 @@
 				mouse, 
 				center,
 				snap, 
+				autosize: autoSize,
 				['center-first']: _centerFirst, 
 				['center-last']: _centerLast, 
 				['offset-last']: _offsetLast, 
@@ -101,6 +102,10 @@ const props = defineProps({
 	slidesPerPage: {
 		type: Number,
 		default: -1
+	},
+	autoSize: {
+		type: [String, Number],
+		default: ''
 	},
 	overlay: {
       type: Boolean,
@@ -214,14 +219,20 @@ function updateLayout() {
 	emit('layout', !disabled.value)
 }
 
-let resizeObserver = new ResizeObserver(debounce(() => {
+let resizeTimeout
+const onResize = () => {	
 	updateLayout()
-	if (modelValue.value != null) {
-		goTo(modelValue.value || 0, true)
-	} else {
-		goTo(0, true)
-	}
-}, 100))
+	clearTimeout(resizeTimeout)
+	resizeTimeout = setTimeout(async () => {
+		goToIndex = -1
+		if (modelValue.value != null) {
+			await goTo(modelValue.value || 0, true)
+		} else {
+			await goTo(0, true)
+		}
+	}, 500)
+}
+let resizeObserver = new ResizeObserver(debounce(onResize, 200))
 onMounted(() => {
 	resizeObserver.observe(component.value)
 	resizeObserver.observe(track.value)
@@ -289,7 +300,7 @@ function goTo(index, force) {
 		}
 		
 		if (_trackGap.value) {
-			if (index == 0 || index == elements.length - 1) {
+			if (index == 0 || (index == elements.length - 1 && _offsetLast.value)) {
 				x = element
 			}
 		}
@@ -318,13 +329,11 @@ function goTo(index, force) {
 }
 
 onMounted(() => {
-	nextTick(() => {
-		if (goToIndex != undefined && modelValue.value == null) {
-			const initalIndex = goToIndex
-			goToIndex = undefined
-			goTo(initalIndex)
-		}
-	})
+	if (goToIndex != undefined && modelValue.value == null) {
+		const initalIndex = goToIndex
+		goToIndex = undefined
+		goTo(initalIndex)
+	}
 })
 
 function getActive() {
@@ -591,6 +600,12 @@ watch(modelValue, () => {
 	scroll-snap-type: x proximity;
 	height: 100%;
 	width: 100%;
+
+	&.autosize {
+		::v-deep(.slide) {
+			width: calc((var(--carousel-width) - var(--track-gap) - (v-bind(autoSize) - 1) * var(--slide-gap)) / v-bind(autoSize));
+		}
+	}
 
 	&.snap {
 		scroll-snap-type: x mandatory;

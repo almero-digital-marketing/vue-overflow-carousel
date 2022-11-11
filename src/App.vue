@@ -117,12 +117,12 @@
 
 
   <div class="markers">
-    <Carousel class="carousel-2" ref="carousel" :capture-scroll="true" :center="false" :center-first="false" :center-last="false" slide-gap="100px" track-gap="200px" :overlay="true" :snap="false" :debug="true">
+    <Carousel class="carousel-2" ref="carousel" :capture-scroll="true" :center="false" :center-first="false" :center-last="false" slide-gap="100px" :overlay="true" :snap="false" :debug="true" auto-size="var(--auto-size)">
       <template #overlay="navigation">
         <div class="wheel">
           <div class="circle">{{ navigation.progress }}</div>
-          <button @click="navigation.prev()" :disabled="!navigation.hasPrev">Prev</button>
-          <button @click="navigation.next()" :disabled="!navigation.hasNext">Next</button>
+          <button @click="navigation.prev(2)" :disabled="!navigation.hasPrev">Prev</button>
+          <button @click="navigation.next(2)" :disabled="!navigation.hasNext">Next</button>
         </div>
       </template>
       <template v-slot="carousel">
@@ -332,13 +332,15 @@ img {
   left: 50%;
   z-index: 10;
 }
-
+.carousel-2 {
+  --auto-size: 2.5;
+}
 .carousel-2 .slide {
   border: 1px solid green;
   min-height: 300px;
   width: 400px;
   position: relative;
-  transition: all 1s;
+  /* transition: all 1s, width 0; */
   z-index: 1;
 }
 .carousel-2 .wheel {
