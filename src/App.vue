@@ -117,7 +117,17 @@
 
 
   <div class="markers">
-    <Carousel class="carousel-2" ref="carousel" :capture-scroll="true" :center="false" :center-first="false" :center-last="false" slide-gap="100px" :overlay="true" :snap="false" :debug="true" auto-size="var(--auto-size)">
+    <Carousel class="carousel-2" 
+      ref="carousel" 
+      :capture-scroll="true" 
+      :center="false" 
+      :center-first="false" 
+      :center-last="false" 
+      slide-gap="100px" 
+      :overlay="true" 
+      :debug="true" 
+      auto-size="var(--auto-size)"
+    >
       <template #overlay="navigation">
         {{ navigation.progress }}
         <br>
