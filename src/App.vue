@@ -119,11 +119,10 @@
   <div class="markers">
     <Carousel class="carousel-2" ref="carousel" :capture-scroll="true" :center="false" :center-first="false" :center-last="false" slide-gap="100px" :overlay="true" :snap="false" :debug="true" auto-size="var(--auto-size)">
       <template #overlay="navigation">
-        <div class="wheel">
-          <div class="circle">{{ navigation.progress }}</div>
-          <button @click="navigation.prev(2)" :disabled="!navigation.hasPrev">Prev</button>
-          <button @click="navigation.next(2)" :disabled="!navigation.hasNext">Next</button>
-        </div>
+        {{ navigation.progress }}
+        <br>
+        <button @click="navigation.prev(2)" :disabled="!navigation.hasPrev">Prev</button>
+        <button @click="navigation.next(2)" :disabled="!navigation.hasNext">Next</button>
       </template>
       <template v-slot="carousel">
         <Slide>
