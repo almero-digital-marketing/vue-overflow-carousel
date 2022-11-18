@@ -1,16 +1,30 @@
 <template>
-    <div class="placeholder" ref="placeholder" :class="{ active }">
+    <div 
+        class="placeholder" 
+        ref="placeholder" 
+        :class="{ 
+            active, 
+            'auto-size': autoSize 
+        }"
+    >
         <div class="slide">
             <slot :active="active"></slot>
         </div>
     </div>
 </template>
 <script setup>
-import { inject, onMounted, ref, watch } from 'vue'
+import { inject, onMounted, ref, watch, nextTick } from 'vue'
 
 const activeIndex = inject('active')
 const placeholder = ref(null)
 const active = ref(false)
+
+const props = defineProps({
+	autoSize: {
+		type: Boolean,
+		default: false
+	},
+})
 
 function toggleActive() {
     const index = [...placeholder.value.parentNode.getElementsByClassName('placeholder')].indexOf(placeholder.value)
@@ -18,7 +32,7 @@ function toggleActive() {
 }
 
 watch(activeIndex, toggleActive)
-onMounted(toggleActive)
+onMounted(() => nextTick(toggleActive))
 </script>
 <style lang="less" scoped>
 
@@ -28,26 +42,12 @@ onMounted(toggleActive)
     flex-grow: 0;
     user-select: none;
 
-    .snap & {
-        .slide {
-            scroll-snap-align: start;
-        }
-    }
-
     &:first-child {
         padding-left: var(--track-gap);
-        scroll-snap-align: start;
-        .slide {
-            scroll-snap-align: unset;
-        }
     }
     &:last-child {
         margin-right: 0;
-        padding-right: calc(var(--track-gap));
-        scroll-snap-align: end;
-        .slide {
-            scroll-snap-align: unset;
-        }
+        padding-right: var(--track-gap);
     }
     &:not(:first-child) {
         padding-left: var(--slide-gap);
@@ -56,19 +56,14 @@ onMounted(toggleActive)
     .center & {
         &:first-child {
             margin-left: calc(-1 * var(--slide-gap));
-            scroll-snap-align: unset;
         }
         &:last-child {
             padding-right: calc(1 * var(--track-gap));
             margin-right: 0;
-            scroll-snap-align: unset;
         }
         &:not(:first-child):not(:last-child) {
             padding-left: 0;
             margin-left: 0;
-            .slide {
-                scroll-snap-align: center;
-            }
         }
         &:not(:first-child) {
             padding-left: unset;
@@ -79,9 +74,6 @@ onMounted(toggleActive)
         &:first-child {
             padding-left: unset;
             margin-left: calc(var(--margin-first) - var(--slide-gap));
-            .slide {
-                scroll-snap-align: center;
-            }
         }
 	}
 
@@ -89,9 +81,6 @@ onMounted(toggleActive)
         &:last-child {
             margin-right: calc(var(--margin-last) - var(--slide-gap));
             padding-right: unset;
-            .slide {
-                scroll-snap-align: center;
-            }
         }
     }
 
@@ -99,16 +88,17 @@ onMounted(toggleActive)
         &:last-child {
             margin-right: calc(var(--margin-last) + var(--slide-gap));
             padding-right: unset;
-            scroll-snap-align: unset;
-            .slide {
-                scroll-snap-align: start;
-            }
         }
     }
 
     .auto-width & {
         .slide {
-            width: calc((var(--carousel-width) - 2 * var(--track-gap) - (var(--slides-per-page) - 1) * var(--slide-gap)) / var(--slides-per-page));
+			width: calc((var(--carousel-width) - 2 * var(--track-gap) - (var(--auto-width) - 1) * var(--slide-gap)) / var(--auto-width));
+        }
+    }
+    .auto-height & {
+        .slide {
+            height: 100%;
         }
     }
 }

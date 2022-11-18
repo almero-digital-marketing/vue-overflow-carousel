@@ -7,7 +7,7 @@
     &nbsp;
     <button @click="active = 0">First</button>
   </div>
-  <Carousel id="carousel-1" :slides-per-page="2" :enabled="true" :duration=".4" v-model="active" track-gap="100px" slide-gap="10px" :debug="false">
+  <Carousel id="carousel-1" :auto-width="2" :enabled="true" :duration=".4" v-model="active" track-gap="100px" slide-gap="10px" :debug="false">
     <Slide>
       0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.
     </Slide>
@@ -55,7 +55,7 @@
     </Slide>
   </Carousel>
   <div class="markers">
-    <Carousel class="carousel-2" :capture-scroll="true" :center="true" track-gap="200px" v-model="active" :overlay="true" >
+    <Carousel class="carousel-2" :capture-scroll="true" :center="false" :center-last="false" :center-first="false" track-gap="10vw" slide-gap="50px" v-model="active" :auto-height="true" :overlay="true" >
       <template #overlay="overlay">
         <div class="wheel">
           <div class="circle">{{ overlay.progress }}</div>
@@ -127,13 +127,13 @@
       track-gap="200px"
       :overlay="true" 
       :debug="true" 
-      auto-size="var(--auto-size)"
+      auto-width="var(--auto-width)"
     >
       <template #overlay="navigation">
         {{ navigation.progress }}
         <br>
-        <button @click="navigation.prev(2)" :disabled="!navigation.hasPrev">Prev</button>
-        <button @click="navigation.next(2)" :disabled="!navigation.hasNext">Next</button>
+        <button @click="navigation.prev(2)" :disabled="!navigation.hasPrev">Prev 2</button>
+        <button @click="navigation.next(1)" :disabled="!navigation.hasNext">Next 1</button>
       </template>
       <template v-slot="carousel">
         <Slide>
@@ -187,7 +187,16 @@
 
 
   <div class="markers">
-    <Carousel class="carousel-2" :capture-scroll="true" :center="true" :center-first="false" :center-last="false" slide-gap="100px" track-gap="20px" :overlay="true">
+    <Carousel 
+      class="carousel-2" 
+      :capture-scroll="true" 
+      :center="true" 
+      :center-first="false" 
+      :center-last="false" 
+      slide-gap="100px" 
+      track-gap="20px" 
+      :overlay="true"
+    >
       <template #overlay="overlay">
         <div class="wheel">
           <div class="circle">{{ overlay.progress }}</div>
@@ -343,7 +352,7 @@ img {
   z-index: 10;
 }
 .carousel-2 {
-  --auto-size: 2.5;
+  --auto-width: 2;
 }
 .carousel-2 .slide {
   border: 1px solid green;
@@ -401,9 +410,9 @@ img {
   top: 0;
   left: 0;
 }
-.placeholder { 
-  /* border: 1px solid purple; */
-}
+/* .placeholder { 
+  border: 1px solid purple;
+} */
 body {
   padding-bottom: 200vh;
 }
