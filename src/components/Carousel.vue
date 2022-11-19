@@ -109,6 +109,10 @@ const props = defineProps({
       type: Boolean,
       default: false,
     },
+	snap: {
+		type: Boolean,
+		default: true
+	},
 	debug: {
 		type: Boolean,
 		default: false
@@ -116,7 +120,7 @@ const props = defineProps({
 })
 
 const scroller = ref(null)
-const { modelValue, captureScroll, center, gap, slideGap, trackGap, centerFirst, centerLast, offsetLast, debug } = toRefs(props)
+const { modelValue, captureScroll, center, gap, slideGap, trackGap, centerFirst, centerLast, offsetLast, snap, debug } = toRefs(props)
 const { hasFocus } = useFocusManager()
 const { onScrollEnd, grabbing } = useScrollingManager(scroller)
 
@@ -406,13 +410,15 @@ function onScroll() {
 	}
 }
 
-onScrollEnd(async () => {
-	debug.value && console.log('Scroll end')
-	if (!disabled.value && hasFocus()) {
-		const index = getActive()	
-		await goTo(index)
-	}
-})
+if(snap.value) {
+	onScrollEnd(async () => {
+		debug.value && console.log('Scroll end')
+		if (!disabled.value && hasFocus()) {
+			const index = getActive()	
+			await goTo(index)
+		}
+	})
+}
 
 let spinning = 0
 function onMouseWheel(e) {
