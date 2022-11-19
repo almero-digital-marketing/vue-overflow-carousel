@@ -438,7 +438,7 @@ function onMouseWheel(e) {
 			setTimeout(() => {
 				spinning = false
 				debug.value && console.log('Spinning:', spinning)
-			}, 1000 * duration)
+			}, 300)
 			e.preventDefault()
 
 			let step = current + Math.sign(e.deltaY)
