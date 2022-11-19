@@ -420,7 +420,7 @@ if(snap.value) {
 	})
 }
 
-let spinning = 0
+let spinning
 function onMouseWheel(e) {
 	if (!scroller.value || disabled.value) return
 	
@@ -429,24 +429,21 @@ function onMouseWheel(e) {
 	const current = getActive()
     if (spinning) {
 		debug.value && console.log('Spinning:', spinning, total, current)
-		e.preventDefault()
+		return e.preventDefault()
 	} 
 	if (hasFocus()) {
 		if (e.deltaY > 0 && current < total - 1 ||
 			e.deltaY < 0 && current > 0) {
-
-			spinning++
-			let step = current + Math.sign(e.deltaY)
-
-			debug.value && console.log('Spin:', step)
-
-			goTo(step)
-			.then(() => setTimeout(() => {
-				spinning--
+			spinning = true
+			setTimeout(() => {
+				spinning = false
 				debug.value && console.log('Spinning:', spinning)
-			}, 300))
-
+			}, 1000 * duration)
 			e.preventDefault()
+
+			let step = current + Math.sign(e.deltaY)
+			debug.value && console.log('Spin:', step)
+			goTo(step)
 		}
 	}
 }
