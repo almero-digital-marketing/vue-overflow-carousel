@@ -1,6 +1,7 @@
 <template>
 	<div class="carousel focus-manager">
-		<div class="scroller" 
+		<div 
+			class="scroller" 
 			:style="{
 				'--margin-first': marginFirst + 'px',
 				'--margin-last': marginLast + 'px',
@@ -20,24 +21,25 @@
 				'has-prev': hasPrev,
 				'has-next': hasNext,
 			}" 
-			ref="component"
+			ref="scroller"
 			@scroll="onScroll"
 			@mousewheel="onMouseWheel" 
-			@mousedown="onMouseDown" 
-			@mouseup="onMouseUp" 
-			@mousemove="onMouseMove"
-			@mouseleave="onMouseLeave"
-			@mouseenter="onMouseEnter"
-			@touchstart="onTouchStart"
-			@touchend="onTouchEnd"
 		>
-			<div class="track" ref="track">
-				<slot :scroller="component" :active="active" :progress="progress" :scrollDirection="scrollDirection"></slot>
+			<div 
+				class="track" 
+				ref="track"
+			>
+				<slot 
+					:scroller="scroller" 
+					:active="active" 
+					:progress="progress" 
+					:scrollDirection="scrollDirection"
+				></slot>
 			</div>
 		</div>
 		<div class="overlay" v-if="overlay">
 			<slot name="overlay" 
-				:scroller="component" 
+				:scroller="scroller" 
 				:active="active" 
 				:progress="progress" 
 				:scrollDirection="scrollDirection" 
@@ -52,7 +54,7 @@
 <script setup>
 import { ref, onMounted, toRefs, watch, onBeforeUnmount, provide, computed, nextTick } from 'vue'
 import debounce from 'debounce'
-import { waitForScrollEnd } from '../lib/scrolling'
+import { useScrollingManager } from '../lib/scrolling-manager'
 import { useFocusManager } from '../lib/focus-manager'
 import { gsap } from 'gsap'
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
@@ -113,16 +115,12 @@ const props = defineProps({
 	}
 })
 
+const scroller = ref(null)
 const { modelValue, captureScroll, center, gap, slideGap, trackGap, centerFirst, centerLast, offsetLast, debug } = toRefs(props)
-const { hasFocus, toggleFocus } = useFocusManager()
+const { hasFocus } = useFocusManager()
+const { onScrollEnd, grabbing } = useScrollingManager(scroller)
 
-const component = ref(null)
 const track = ref(null)
-const grabbing = ref(false)
-const grabState = ref({
-	x: 0,
-	y: 0
-})
 const width = ref(0)
 const height = ref(0)
 const disabled = ref(false)
@@ -172,18 +170,16 @@ provide('active', active)
 
 let step = -1
 let total = 0
-let semaphor = true
-let lastScrollLeft = 0
-let semaphorTimeout
-let duration = .6
+let lastScroll = 0
+let duration = .4
 
 function updateLayout() {
-	if (!component.value) return
+	if (!scroller.value) return
 
-	width.value = component.value.offsetWidth
-	height.value = component.value.offsetHeight
+	width.value = scroller.value.offsetWidth
+	height.value = scroller.value.offsetHeight
 
-	let elements = component.value.querySelectorAll('.placeholder')
+	let elements = scroller.value.querySelectorAll('.placeholder')
     total = elements.length
 	if (!elements.length) {
 		marginFirst.value = 0
@@ -203,8 +199,8 @@ function updateLayout() {
 		marginLast.value = width.value - elements[elements.length - 1].offsetWidth
 	}
 
-	debug.value && console.log('Layout:', track.value.childNodes.length, component.value.offsetWidth, component.value.scrollWidth, component.value.offsetWidth - component.value.scrollWidth - 200)
-	disabled.value = component.value.offsetWidth >= component.value.scrollWidth - 200
+	debug.value && console.log('Layout:', track.value.childNodes.length, scroller.value.offsetWidth, scroller.value.scrollWidth, scroller.value.offsetWidth - scroller.value.scrollWidth - 200)
+	disabled.value = scroller.value.offsetWidth >= scroller.value.scrollWidth - 200
 	if (disabled.value) {
 		marginLast.value = 0
 	}
@@ -225,7 +221,7 @@ const onResize = () => {
 let resizeObserver = new ResizeObserver(debounce(onResize, 200))
 onMounted(() => {
 	nextTick(() => {
-		resizeObserver.observe(component.value)
+		resizeObserver.observe(scroller.value)
 		resizeObserver.observe(track.value)
 		updateLayout()
 	})
@@ -235,16 +231,13 @@ onBeforeUnmount(() => {
 	resizeObserver.disconnect()
 })
 
-let animating = false
 let lastActive
-
 function goTo(index, force) {
-	if (index == -1) index = getActive()	
 	return new Promise(resolve => {
-		if (!component.value || disabled.value) return resolve()
+		if (!scroller.value || disabled.value) return resolve()
 		debug.value && console.log('Go to:', index, force, disabled.value)
 	
-		const elements = component.value.querySelectorAll('.track .placeholder')
+		const elements = scroller.value.querySelectorAll('.track .placeholder')
 		if (!elements.length) return resolve()
 	
 		index = Math.min(Math.max(index, 0), elements.length - 1)
@@ -255,19 +248,19 @@ function goTo(index, force) {
 
 		let offsetX = 0
 		let x = slide
-		let endOffset = component.value.scrollWidth - 200 - element.offsetLeft - element.offsetWidth
+		let endOffset = scroller.value.scrollWidth - 200 - element.offsetLeft - element.offsetWidth
 		let minOffset = 0
 		if (center.value) {
-			let minOffset = (component.value.offsetWidth - slide.clientWidth) / 2
+			let minOffset = (scroller.value.offsetWidth - slide.clientWidth) / 2
 			offsetX = minOffset
 			if (!_centerFirst.value && index == 0) {
 				offsetX = trackOffset - 100
 			} else if (!_centerLast.value) {
-				minOffset = component.value.offsetWidth / 2 - slide.offsetWidth
+				minOffset = scroller.value.offsetWidth / 2 - slide.offsetWidth
 			}
 		} else {
 			if (!_offsetLast.value) {
-				minOffset = component.value.offsetWidth - element.offsetWidth
+				minOffset = scroller.value.offsetWidth - element.offsetWidth
 			}
 			if (_trackGap.value) {
 				offsetX = trackOffset - 100
@@ -283,16 +276,7 @@ function goTo(index, force) {
 			hasNext.value = false
 		}
 
-		if (lastActive != index) {
-			lastActive = index
-			emit('change', index)
-			if (hasFocus()) {
-				emit('update:modelValue', index)
-			}
-		}
-
-		animating = true
-		const tween = gsap.to(component.value, { 
+		const tween = gsap.to(scroller.value, { 
 			scrollTo: {
 				autoKill: true,  
 				x,
@@ -300,48 +284,43 @@ function goTo(index, force) {
 			}, 
 			ease: "power2",
 			duration: force ? 0 : duration,
-			onComplete: async () => {
-				animating = false
-				if (component.value && modelValue.value != null && modelValue.value != index && !hasFocus()) {
-					await goTo(modelValue.value)
-				}
-			}
 		})
 
-		const complete = () => {
+		const complete = (wait) => {
 			setTimeout(() => {
 				if (!tween.isActive()) {
 					resolve()
 				} else {
-					complete()
+					complete(100)
 				}
-			}, force ? 0 : duration)
+			}, force ? 0 : wait)
 		}
-		complete()
+		complete(100 + duration * 1000)
+
 	})
 }
 
 function getActive() {
-	if (!component.value) return
+	if (!scroller.value) return
 
 	const viewportCenter = width.value / 2
 	let initialStep = step
-	const elements = component.value.querySelectorAll('.track .placeholder .slide')
+	const elements = scroller.value.querySelectorAll('.track .placeholder .slide')
 	if (!elements.length) return
 	const firstElement = elements[0]
 	const lastElement = elements[elements.length - 1]
 
-	if (component.value.scrollLeft <= 100 + firstElement.offsetWidth * .1) {
+	if (scroller.value.scrollLeft <= 100 + firstElement.offsetWidth * .1) {
 		initialStep = 0
-	} else if (component.value.scrollWidth - component.value.scrollLeft - component.value.offsetWidth <= 100 + lastElement.offsetWidth * .1) {
+	} else if (scroller.value.scrollWidth - scroller.value.scrollLeft - scroller.value.offsetWidth <= 100 + lastElement.offsetWidth * .1) {
 		initialStep = elements.length - 1
 	} else {
-		const firstElementStart = firstElement.getBoundingClientRect().x - component.value.getBoundingClientRect().x
+		const firstElementStart = firstElement.getBoundingClientRect().x - scroller.value.getBoundingClientRect().x
 		let trackOffset = 0
 
 		for (let index = 0; index < elements.length; index++) {
 			const element = elements[index]
-			const elementStart = element.getBoundingClientRect().x - component.value.getBoundingClientRect().x
+			const elementStart = element.getBoundingClientRect().x - scroller.value.getBoundingClientRect().x
 			const elementEnd = elementStart + element.offsetWidth
 			const elementInsideStart = elementStart + (elementEnd - elementStart) * .25
 			const elementInsideEnd = elementStart + (elementEnd - elementStart) * .75
@@ -349,7 +328,7 @@ function getActive() {
 			if (center.value) {
 				const next = Math.max(0, Math.min(index + scrollDirection.value, elements.length - 1))
 				const nextElement = elements[next]
-				const nextElementStart = nextElement.getBoundingClientRect().x - component.value.getBoundingClientRect().x
+				const nextElementStart = nextElement.getBoundingClientRect().x - scroller.value.getBoundingClientRect().x
 				const nextElementEnd = nextElementStart + nextElement.offsetWidth
 				const nextInsideStart = nextElementStart + (nextElementEnd - nextElementStart) * .25
 				const nextInsideEnd = nextElementStart + (nextElementEnd - nextElementStart) * .75
@@ -401,20 +380,52 @@ function getActive() {
 	return initialStep
 }
 
+function onScroll() {
+	if (!scroller.value) return
+
+	if (scroller.value.scrollLeft > lastScroll) {
+		scrollDirection.value = 1
+	} else if (scroller.value.scrollLeft < lastScroll) {
+		scrollDirection.value = -1
+	} else {
+		scrollDirection.value = 0
+	}
+	lastScroll = scroller.value.scrollLeft
+
+	active.value = getActive()
+	progress.value = (scroller.value.scrollLeft - 100) / (scroller.value.scrollWidth - scroller.value.offsetWidth - 200)
+	
+	emit('progress', progress.value)
+
+	if (lastActive != active.value) {
+		lastActive = active.value
+		emit('change', active.value)
+		if (hasFocus()) {
+			emit('update:modelValue', active.value)
+		}
+	}
+}
+
+onScrollEnd(async () => {
+	debug.value && console.log('Scroll end')
+	if (!disabled.value && hasFocus()) {
+		const index = getActive()	
+		await goTo(index)
+	}
+})
+
 let spinning = 0
 function onMouseWheel(e) {
-	if (!component.value || disabled.value) return
+	if (!scroller.value || disabled.value) return
 	
-	toggleFocus()
 	if (!captureScroll.value || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
 
-	duration = .6
 	const current = getActive()
     if (spinning) {
 		debug.value && console.log('Spinning:', spinning, total, current)
 		e.preventDefault()
 	} 
-	if (semaphor) {
+	if (hasFocus()) {
 		if (e.deltaY > 0 && current < total - 1 ||
 			e.deltaY < 0 && current > 0) {
 
@@ -434,106 +445,8 @@ function onMouseWheel(e) {
 	}
 }
 
-function onMouseMove(e) {
-	toggleFocus()
-	let deltaX = grabState.value.x - e.screenX
-	if (grabbing.value) {
-		if (deltaX != 0) {
-			grabState.value.x = e.screenX
-			component.value.scrollBy(deltaX, 0)
-		}
-	}
-}
-
-function onMouseEnter() {
-	if (grabbing.value) {
-		grabbing.value = false
-		goTo(-1)
-	}
-    semaphorTimeout = setTimeout(() => semaphor = true, 150)
-
-}
-
-let grabbingTimeout
-function onMouseDown({ screenX, screenY }) {
-	if (disabled.value) return
-	grabbingTimeout = setTimeout(() => {
-		grabbing.value = true
-		duration = .4
-	}, 50)
-
-	grabState.value = {
-		x: screenX,
-		y: screenY
-	}
-}
-
-function onMouseUp() {
-	clearTimeout(grabbingTimeout)
-	grabbing.value = false
-	if (disabled.value) return
-	grabState.value = {}
-
-	if (!scrolling) {
-		goTo(-1)
-	}
-}
-
-function onMouseLeave() {
-	clearTimeout(grabbingTimeout)
-	if (disabled.value) return
-	if (grabbing.value) {	
-		grabbing.value = false
-		goTo(-1)
-	}
-
-    clearTimeout(semaphorTimeout)
-	semaphor = false
-}
-
-function onTouchStart() {
-	duration = 1
-	if (disabled.value) return
-	grabbing.value = true
-	toggleFocus()
-}
-
-function onTouchEnd() {
-	grabbing.value = false
-	if (!scrolling) {
-		goTo(-1)
-	}
-}
-
-let scrolling = false
-function onScroll() {
-	if (!component.value) return
-
-	if (component.value.scrollLeft > lastScrollLeft) {
-		scrollDirection.value = 1
-	} else {
-		scrollDirection.value = -1
-	}
-	lastScrollLeft = component.value.scrollLeft
-
-	active.value = getActive()
-	progress.value = (component.value.scrollLeft - 100) / (component.value.scrollWidth - component.value.offsetWidth - 200)
-	
-	emit('progress', progress.value)
-
-
-	if (!scrolling && !animating) {
-		scrolling = waitForScrollEnd(component.value).then(async () => {
-			if (!grabbing.value && hasFocus()) {
-				await goTo(-1)
-			}
-			scrolling = false
-		})
-	}
-}
-
 watch(modelValue, () => {
-	if (!hasFocus() || !scrolling) {
+	if (!hasFocus()) {
 		if (modelValue.value < 0) {
 			emit("update:modelValue", 0)
     	} else if (modelValue.value > total - 1){

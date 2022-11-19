@@ -359,7 +359,7 @@ img {
   min-height: 300px;
   width: 400px;
   position: relative;
-  /* transition: all 1s, width 0; */
+  transition: all .2s;
   z-index: 1;
 }
 .carousel-2 .wheel {
