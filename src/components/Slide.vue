@@ -122,6 +122,7 @@ onMounted(() => nextTick(toggleActive))
 }
 .slide {
     scroll-snap-align: start;
+    scroll-snap-stop: always;
     .center & {
         scroll-snap-align: center;
     }
