@@ -4,6 +4,7 @@ function useScrollingManager(scroller) {
 
     const snapping = ref(false)
     const grabbing = ref(false)
+    const mouseScrolling = ref(false)
     
     let pressTimeout
     let grabState = { x:0, y:0 }
@@ -13,17 +14,19 @@ function useScrollingManager(scroller) {
 
         function onScroll() {
             clearInterval(scrollInterval)
-            scrollInterval = setInterval(() => {
-                if (!grabbing.value && !snapping.value) {
-                    clearInterval(scrollInterval)
-                    snapping.value = true
-                    snap()
-                    .then(() => {
-                        snapping.value = false
+            if (mouseScrolling.value) {
+                scrollInterval = setInterval(() => {
+                    if (!grabbing.value && !snapping.value) {
                         clearInterval(scrollInterval)
-                    })
-                }
-            }, 200)
+                        snapping.value = true
+                        snap()
+                        .then(() => {
+                            snapping.value = false
+                            clearInterval(scrollInterval)
+                        })
+                    }
+                }, 200)
+            }
         }
 
         onMounted(() => {
@@ -44,7 +47,13 @@ function useScrollingManager(scroller) {
         clearTimeout(pressTimeout)
     }
 
+    function onTouchStart() {
+        mouseScrolling.value = false
+        onPress()
+    }
+
     function onMouseDown(e) {
+        mouseScrolling.value = true
         clearTimeout(pressTimeout)
         pressTimeout = setTimeout(onPress, 50)
         grabState = {
@@ -63,29 +72,36 @@ function useScrollingManager(scroller) {
         }
     }
 
+    function onMouseWheel() {
+        mouseScrolling.value = true
+    }
+
     onMounted(() => {
-        scroller.value.addEventListener('touchstart', onPress)
+        scroller.value.addEventListener('touchstart', onTouchStart)
         scroller.value.addEventListener('touchend', onRelease)
         scroller.value.addEventListener('mousedown', onMouseDown)
         scroller.value.addEventListener('mouseup', onRelease)
         scroller.value.addEventListener('mouseleave', onRelease)
         scroller.value.addEventListener('mouseenter', onRelease)
         scroller.value.addEventListener('mousemove', onMouseMove)
+        scroller.value.addEventListener('mousewheel', onMouseWheel)
     })
 
     onUnmounted(() => {
-        scroller.value.removeEventListener('touchstart', onPress)
+        scroller.value.removeEventListener('touchstart', onTouchStart)
         scroller.value.removeEventListener('touchend', onRelease)
         scroller.value.removeEventListener('mousedown', onMouseDown)
         scroller.value.removeEventListener('mouseup', onRelease)
         scroller.value.removeEventListener('mouseenter', onRelease)
         scroller.value.removeEventListener('mousemove', onMouseMove)
+        scroller.value.removeEventListener('mousewheel', onMouseWheel)
     })
     
     return {
         onScrollEnd,
         grabbing,
-        snapping
+        snapping,
+        mouseScrolling
     }
 }
 

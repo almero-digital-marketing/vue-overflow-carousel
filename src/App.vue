@@ -128,6 +128,7 @@
       :overlay="true" 
       :debug="true" 
       auto-width="var(--auto-width)"
+      :snap='true'
     >
       <template #overlay="navigation">
         {{ navigation.progress }}
@@ -191,8 +192,8 @@
       class="carousel-2" 
       :capture-scroll="true" 
       :center="true" 
-      :center-first="false" 
-      :center-last="false" 
+      :center-first="true" 
+      :center-last="true" 
       slide-gap="100px" 
       track-gap="20px" 
       :overlay="true"

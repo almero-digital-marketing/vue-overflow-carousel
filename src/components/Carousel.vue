@@ -10,6 +10,7 @@
 				disabled,
 				grabbing, 
 				center,
+				snap,
 				'auto-width': autoWidth,
 				'auto-height': autoHeight,
 				'center-first': _centerFirst, 
@@ -20,6 +21,7 @@
 				'direction-backward': scrollDirection == -1,
 				'has-prev': hasPrev,
 				'has-next': hasNext,
+				'mouse-scrolling': mouseScrolling
 			}" 
 			ref="scroller"
 			@scroll="onScroll"
@@ -122,7 +124,7 @@ const props = defineProps({
 const scroller = ref(null)
 const { modelValue, captureScroll, center, gap, slideGap, trackGap, centerFirst, centerLast, offsetLast, snap, debug } = toRefs(props)
 const { hasFocus } = useFocusManager()
-const { onScrollEnd, grabbing } = useScrollingManager(scroller)
+const { onScrollEnd, grabbing, mouseScrolling } = useScrollingManager(scroller)
 
 const track = ref(null)
 const width = ref(0)
@@ -190,6 +192,7 @@ function updateLayout() {
 		marginLast.value = 0
 		return
 	}
+
 	
 	if (_centerFirst.value) {
 		marginFirst.value = (width.value - elements[0].offsetWidth) / 2
@@ -200,7 +203,8 @@ function updateLayout() {
 	}
 
 	if (_offsetLast.value) {
-		marginLast.value = width.value - elements[elements.length - 1].offsetWidth
+		const trackOffset = elements[0].querySelector('.slide').offsetLeft
+		marginLast.value = width.value - elements[elements.length - 1].offsetWidth - trackOffset + 100
 	}
 
 	debug.value && console.log('Layout:', track.value.childNodes.length, scroller.value.offsetWidth, scroller.value.scrollWidth, scroller.value.offsetWidth - scroller.value.scrollWidth - 200)
@@ -293,6 +297,7 @@ function goTo(index, force) {
 		const complete = (wait) => {
 			setTimeout(() => {
 				if (!tween.isActive()) {
+					scroller.value?.style.removeProperty('scroll-snap-type')
 					resolve()
 				} else {
 					complete(100)
@@ -482,7 +487,11 @@ watch(modelValue, () => {
 	display: flex;
 	height: 100%;
 	width: 100%;
-	scroll-padding: var(--track-gap);
+
+	&.snap:not(.mouse-scrolling) {
+		scroll-padding: var(--track-gap);
+		scroll-snap-type: x mandatory;
+	}
 
 	&.grabbing {
 		cursor: grabbing;

@@ -56,10 +56,17 @@ onMounted(() => nextTick(toggleActive))
     .center & {
         &:first-child {
             margin-left: calc(-1 * var(--slide-gap));
+            .slide {
+                scroll-snap-align: start;
+            }
         }
         &:last-child {
             padding-right: calc(1 * var(--track-gap));
             margin-right: 0;
+            .slide {
+                scroll-snap-align: end;
+            }
+
         }
         &:not(:first-child):not(:last-child) {
             padding-left: 0;
@@ -74,6 +81,10 @@ onMounted(() => nextTick(toggleActive))
         &:first-child {
             padding-left: unset;
             margin-left: calc(var(--margin-first) - var(--slide-gap));
+            .slide {
+                scroll-snap-align: center;
+            }
+
         }
 	}
 
@@ -81,6 +92,10 @@ onMounted(() => nextTick(toggleActive))
         &:last-child {
             margin-right: calc(var(--margin-last) - var(--slide-gap));
             padding-right: unset;
+            .slide {
+                scroll-snap-align: center;
+            }
+
         }
     }
 
@@ -88,6 +103,9 @@ onMounted(() => nextTick(toggleActive))
         &:last-child {
             margin-right: calc(var(--margin-last) + var(--slide-gap));
             padding-right: unset;
+            .slide {
+                scroll-snap-align: start;
+            }
         }
     }
 
@@ -103,6 +121,11 @@ onMounted(() => nextTick(toggleActive))
     }
 }
 .slide {
+    scroll-snap-align: start;
+    .center & {
+        scroll-snap-align: center;
+    }
+
     :deep(img, video) {
         pointer-events: none;
     }
