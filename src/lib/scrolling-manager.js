@@ -87,7 +87,7 @@ function useScrollingManager(scroller) {
         scroller.value.addEventListener('mousewheel', onMouseWheel)
     })
 
-    onUnmounted(() => {
+    onBeforeUnmount(() => {
         scroller.value.removeEventListener('touchstart', onTouchStart)
         scroller.value.removeEventListener('touchend', onRelease)
         scroller.value.removeEventListener('mousedown', onMouseDown)
