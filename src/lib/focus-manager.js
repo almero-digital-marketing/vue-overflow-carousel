@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, getCurrentInstance } from 'vue' 
+import { onMounted, onBeforeUnmount, getCurrentInstance } from 'vue' 
 
 class FocusManager {
     static focusId = 0
@@ -31,7 +31,7 @@ function useFocusManager() {
         vnode.el.addEventListener('mousewheel', toggleFocus)
         vnode.el.addEventListener('mousemove', toggleFocus)
     })
-    onUnmounted(() => {
+    onBeforeUnmount(() => {
         vnode.el.removeEventListener('touchstart', toggleFocus)
         vnode.el.removeEventListener('mousewheel', toggleFocus)
         vnode.el.removeEventListener('mousemove', toggleFocus)

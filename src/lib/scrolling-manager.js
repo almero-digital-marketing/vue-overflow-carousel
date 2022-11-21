@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, ref } from 'vue' 
+import { onMounted, onBeforeUnmount, ref } from 'vue' 
 
 function useScrollingManager(scroller) {
 
@@ -33,7 +33,7 @@ function useScrollingManager(scroller) {
             scroller.value.addEventListener('scroll', onScroll)
         })
         
-        onUnmounted(() => {
+        onBeforeUnmount(() => {
             scroller.value.removeEventListener('scroll', onScroll)
         })
     }
