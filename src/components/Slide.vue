@@ -27,7 +27,7 @@ const props = defineProps({
 })
 
 function toggleActive() {
-    const index = [...placeholder.value?.parentNode.getElementsByClassName('placeholder')].indexOf(placeholder.value)
+    const index = [...(placeholder.value?.parentNode.getElementsByClassName('placeholder') || [])].indexOf(placeholder.value)
     active.value = index == activeIndex.value
 }
 
