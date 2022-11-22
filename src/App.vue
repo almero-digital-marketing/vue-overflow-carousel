@@ -7,7 +7,7 @@
     &nbsp;
     <button @click="active = 0">First</button>
   </div>
-  <Carousel id="carousel-1" :auto-width="2" :enabled="true" :duration=".4" v-model="active" track-gap="100px" slide-gap="10px" :debug="false" v-if="false">
+  <Carousel id="carousel-1" :auto-width="2" :enabled="true" :duration=".4" v-model="active" track-gap="100px" slide-gap="10px" :debug="false">
     <Slide>
       0. Lorem ipsum dolor sit amet, cum ut movet dictas scribentur, dicta saperet vix te. Mea graece sententiae id, ei qui mundi pericula adipiscing. At mucius facilisis dissentiunt vim, nostrum patrioque te ius. Dicant blandit ut nam.
     </Slide>
