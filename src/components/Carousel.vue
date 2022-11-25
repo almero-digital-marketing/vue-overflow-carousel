@@ -124,7 +124,6 @@ const props = defineProps({
 const scroller = ref(null)
 const { modelValue, captureScroll, center, gap, slideGap, trackGap, centerFirst, centerLast, offsetLast, snap, debug } = toRefs(props)
 const { hasFocus } = useFocusManager()
-const { onScrollEnd, grabbing, mouseScrolling } = useScrollingManager(scroller)
 
 const track = ref(null)
 const width = ref(0)
@@ -140,19 +139,19 @@ const scrollDirection = ref(0)
 const hasPrev = ref(false)
 const hasNext = ref(true)
 
-function next(count, force) {
+function next(count, duration) {
 	const step = active.value + (count || 1)
-	return goTo(step, force)
+	return goTo(step, duration)
 }
 
-function prev(count, force) {
+function prev(count, duration) {
 	const step = Math.max(active.value - (count || 1), 0)
-	return goTo(step, force)
+	return goTo(step, duration)
 }
 
 defineExpose({ 
-	goTo(index, force) {
-		goTo(index, force)
+	goTo(index, duration) {
+		goTo(index, duration)
 	},
 	next,
 	prev,
@@ -177,7 +176,6 @@ provide('active', active)
 let step = -1
 let total = 0
 let lastScroll = 0
-let duration = .4
 
 function updateLayout() {
 	if (!scroller.value) return
@@ -220,9 +218,9 @@ const onResize = () => {
 	updateLayout()
 
 	if (modelValue.value != null) {
-		goTo(modelValue.value || 0, true)
+		goTo(modelValue.value || 0, 0)
 	} else {
-		goTo(0, true)
+		goTo(0, 0)
 	}
 }
 
@@ -240,10 +238,10 @@ onBeforeUnmount(() => {
 })
 
 let lastActive
-function goTo(index, force) {
+function goTo(index, duration = .4) {
 	return new Promise(resolve => {
 		if (!scroller.value || disabled.value) return resolve()
-		debug.value && console.log('Go to:', index, force, disabled.value)
+		debug.value && console.log('Go to:', index, duration, disabled.value)
 	
 		const elements = scroller.value.querySelectorAll('.track .placeholder')
 		if (!elements.length) return resolve()
@@ -277,7 +275,7 @@ function goTo(index, force) {
 
 		if (endOffset < minOffset && !_offsetLast.value && !_centerLast.value) {
 			if (active.value > index) {
-				return goTo(index - 1, force).then(resolve)
+				return goTo(index - 1, duration).then(resolve)
 			}
 			x = 'max'
 			offsetX = 100
@@ -290,8 +288,8 @@ function goTo(index, force) {
 				x,
 				offsetX
 			}, 
-			ease: "power2",
-			duration: force ? 0 : duration,
+			ease: "easeout",
+			duration,
 		})
 
 		const complete = (wait) => {
@@ -302,7 +300,7 @@ function goTo(index, force) {
 				} else {
 					complete(100)
 				}
-			}, force ? 0 : wait)
+			}, duration == 0 ? 0 : wait)
 		}
 		complete(100 + duration * 1000)
 
@@ -415,16 +413,6 @@ function onScroll() {
 	}
 }
 
-if(snap.value) {
-	onScrollEnd(async () => {
-		debug.value && console.log('Scroll end')
-		if (!disabled.value && hasFocus()) {
-			const index = getActive()	
-			await goTo(index)
-		}
-	})
-}
-
 let spinning
 function onMouseWheel(e) {
 	if (!scroller.value || disabled.value) return
@@ -452,6 +440,8 @@ function onMouseWheel(e) {
 		}
 	}
 }
+
+const { grabbing, mouseScrolling } = useScrollingManager({scroller, goTo, active})
 
 watch(modelValue, () => {
 	if (!hasFocus()) {
