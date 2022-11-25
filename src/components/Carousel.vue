@@ -115,6 +115,10 @@ const props = defineProps({
 		type: Boolean,
 		default: true
 	},
+	scrollCount: {
+		type: Number,
+		default: 1
+	},
 	debug: {
 		type: Boolean,
 		default: false
@@ -122,7 +126,7 @@ const props = defineProps({
 })
 
 const scroller = ref(null)
-const { modelValue, captureScroll, center, gap, slideGap, trackGap, centerFirst, centerLast, offsetLast, snap, debug } = toRefs(props)
+const { modelValue, captureScroll, center, gap, slideGap, trackGap, centerFirst, centerLast, offsetLast, scrollCount, debug } = toRefs(props)
 const { hasFocus } = useFocusManager()
 
 const track = ref(null)
@@ -140,12 +144,12 @@ const hasPrev = ref(false)
 const hasNext = ref(true)
 
 function next(count, duration) {
-	const step = active.value + (count || 1)
+	const step = active.value + (count || scrollCount.value)
 	return goTo(step, duration)
 }
 
 function prev(count, duration) {
-	const step = Math.max(active.value - (count || 1), 0)
+	const step = Math.max(active.value - (count || scrollCount.value), 0)
 	return goTo(step, duration)
 }
 
@@ -437,14 +441,14 @@ function onMouseWheel(e) {
 			e.preventDefault()
 			e.stopPropagation()
 
-			let step = current + Math.sign(e.deltaY)
+			let step = current + Math.sign(e.deltaY) * scrollCount.value
 			debug.value && console.log('Spin:', step)
 			goTo(step, .6)
 		}
 	}
 }
 
-const { grabbing, mouseScrolling } = useScrollingManager({scroller, goTo, active})
+const { grabbing, mouseScrolling } = useScrollingManager({scroller, goTo, active, scrollCount})
 
 watch(modelValue, () => {
 	if (!hasFocus()) {

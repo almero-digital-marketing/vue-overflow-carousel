@@ -1,5 +1,5 @@
 export default {
-    created(el) {
+    created(el, binding) {
         el.state = {
             onClick(e) {
                 if (el.state.down) {
@@ -10,6 +10,10 @@ export default {
     
                     if (dx > 1 || dy > 1) {
                         e.preventDefault()
+                    } else {
+                        if (binding && binding.value) {
+                            binding.value(el)
+                        }
                     }
                     delete el.state.down
                 }

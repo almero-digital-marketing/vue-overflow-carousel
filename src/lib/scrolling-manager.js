@@ -1,6 +1,6 @@
 import { onMounted, onBeforeUnmount, ref } from 'vue' 
 
-function useScrollingManager({scroller, active, goTo}) {
+function useScrollingManager({scroller, active, goTo, scrollCount}) {
 
     const grabbing = ref(false)
     const mouseScrolling = ref(false)
@@ -29,8 +29,8 @@ function useScrollingManager({scroller, active, goTo}) {
     function onMouseUp(e) {
         if (grabbing.value) {
             grabbing.value = false
-            if (Math.abs(grabState.startX - e.screenX) > 60 && active.value == grabState.active) {
-                goTo(active.value + Math.sign(grabState.startX - e.screenX), .6)
+            if (Math.abs(grabState.startX - e.screenX) > 60 && Math.abs(active.value - grabState.active) < scrollCount.value) {
+                goTo(active.value + Math.sign(grabState.startX - e.screenX) * scrollCount.value, .6)
             } else {
                 goTo(active.value, .6)
             }
