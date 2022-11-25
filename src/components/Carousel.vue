@@ -422,7 +422,9 @@ function onMouseWheel(e) {
 	const current = getActive()
     if (spinning) {
 		debug.value && console.log('Spinning:', spinning, total, current)
-		return e.preventDefault()
+		e.stopPropagation()
+		e.preventDefault()
+		return
 	} 
 	if (hasFocus()) {
 		if (e.deltaY > 0 && current < total - 1 ||
@@ -433,6 +435,7 @@ function onMouseWheel(e) {
 				debug.value && console.log('Spinning:', spinning)
 			}, 300)
 			e.preventDefault()
+			e.stopPropagation()
 
 			let step = current + Math.sign(e.deltaY)
 			debug.value && console.log('Spin:', step)
