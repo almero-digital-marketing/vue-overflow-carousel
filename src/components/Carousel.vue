@@ -439,7 +439,7 @@ function onMouseWheel(e) {
 
 			let step = current + Math.sign(e.deltaY)
 			debug.value && console.log('Spin:', step)
-			goTo(step)
+			goTo(step, .6)
 		}
 	}
 }
@@ -453,7 +453,7 @@ watch(modelValue, () => {
     	} else if (modelValue.value > total - 1){
 			emit("update:modelValue", total - 1)
 		} else if (modelValue.value != getActive()){
-			goTo(modelValue.value)
+			goTo(modelValue.value, .6)
 		} 
 	}
 })
