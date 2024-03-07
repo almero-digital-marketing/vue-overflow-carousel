@@ -9,6 +9,7 @@
             :overlay="true"
             :duration="duration"
             @progress="onProgress"
+            @change="onChange"
         >
             <template #overlay="navigation">
                 <div class="view">
@@ -57,6 +58,7 @@ import Segment from './Segment.vue'
 import { gsap } from 'gsap'
 import debounce from 'debounce'
 
+const emit = defineEmits(['progress', 'layout', 'change'])
 const props = defineProps({
     captureScroll: {
       type: Boolean,
@@ -120,6 +122,11 @@ function onProgress(progress) {
         rotation: -1 * (maxRotation - minRotation) * progress,
         overwrite: true
     })
+    emit('progress', progress)
+}
+
+function onChange(change) {
+    emit('change', change)
 }
 
 function updateLayout() {
@@ -159,6 +166,8 @@ function updateLayout() {
     }
     const internalRadius = radius.value - minHeight.value
     bottomGap.value = (internalRadius - Math.sqrt(Math.pow(internalRadius, 2) - Math.pow(component.value.offsetWidth / 2, 2)))
+    
+    emit('layout')
 }
 
 let mutationObserver = new MutationObserver(debounce(updateLayout, 100))

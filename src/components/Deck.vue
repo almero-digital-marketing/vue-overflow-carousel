@@ -9,6 +9,7 @@
             :overlay="true"
             :duration="duration"
             @progress="onProgress"
+            @change="onChange"
         >
             <template #overlay="navigation">
                 <div class="view">
@@ -58,6 +59,7 @@ import Segment from './Segment.vue'
 import { gsap } from 'gsap'
 import debounce from 'debounce'
 
+const emit = defineEmits(['progress', 'layout', 'change'])
 const props = defineProps({
     captureScroll: {
       type: Boolean,
@@ -138,6 +140,11 @@ function onProgress(progress) {
     for (let index = 0; index < segments.length; index++) {
         gsap.to(segments[index], inOutAnimations[index])
     }
+    emit('progress', progress)
+}
+
+function onChange(change) {
+    emit('change', change)
 }
 
 function updateLayout() {
@@ -171,7 +178,8 @@ function updateLayout() {
     }
     info.value[segments.length - 1].start = 1
     info.value[segments.length - 1].end = 1 + segments[segments.length - 1].offsetWidth / segmentsWidth
-
+    
+    emit('layout')
 }
 
 let mutationObserver = new MutationObserver(debounce(updateLayout, 100))
