@@ -36,10 +36,15 @@
                 </div>
             </template>
             <slide v-for="(item, index) in info" :key="index">
-                <div class="item" :style="{
-                    '--item-width': item.width,
-                    '--item-height': item.height
-                }" v-drag-click="() => onClick(index)"></div>
+                <div class="item" 
+                    :style="{
+                        '--item-width': item.width,
+                        '--item-height': item.height
+                    }" 
+                    v-drag-click="() => onClick(index)" 
+                    @mouseenter="() => onMouseEnter(index)"
+                    @mouseleave="() => onMouseLeave(index)" 
+                ></div>
             </slide>
         </carousel>
     </div>
@@ -93,6 +98,16 @@ defineExpose({
 function onClick(index) {
     const segments = component.value.getElementsByClassName('segment')
     segments[index].click()
+}
+
+function onMouseEnter(index) {
+    const segments = component.value.getElementsByClassName('segment')
+    segments[index].classList.add('hover')
+}
+
+function onMouseLeave(index) {
+    const segments = component.value.getElementsByClassName('segment')
+    segments[index].classList.remove('hover')
 }
 
 function onProgress(progress) {
