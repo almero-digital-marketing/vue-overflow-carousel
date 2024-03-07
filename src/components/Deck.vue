@@ -39,7 +39,7 @@
                 <div class="item" :style="{
                     '--item-width': item.width,
                     '--item-height': item.height
-                }"></div>
+                }" v-drag-click="() => onClick(index)"></div>
             </slide>
         </carousel>
     </div>
@@ -80,6 +80,11 @@ defineExpose({
         overflowCarousel.value.goTo(index, force)
     }
 })
+
+function onClick(index) {
+    const segments = component.value.getElementsByClassName('segment')
+    segments[index].click()
+}
 
 function onProgress(progress) {
     if (!component.value) return
@@ -170,8 +175,6 @@ onBeforeUnmount(() => {
 </script>
 <style lang="less" scoped>
 .deck {
-    --radius: calc(v-bind(radius) * 1px);
-    --diameter: calc(v-bind(radius) * 2px);
     overflow: hidden;
 
     .carousel {

@@ -264,8 +264,8 @@
     <segment v-for="(segment, index) of segments" v-slot="item" :key="index" :style="{
         width: segment.width + 'px',
         height: segment.height + 'px'
-    }">
-        {{ index }} <strong>{{item.active}}</strong> {{ item }}
+    }" @click="() => onWheelSegmentClick(segment, index)">
+        {{ index }} <strong>{{item.active}}</strong> {{ item }} <a href="https://dir.bg">TEST</a>
     </segment>
   </wheel>
   <br><br><br><br>
@@ -294,6 +294,10 @@ const carousel = ref(null)
 
 function test(e) {
   console.log('TEST', e.defaultPrevented, Date.now())
+}
+
+function onWheelSegmentClick(segment, index) {
+  console.log(segment, index)
 }
 
 const segmentValues = Array.from(new Array(10), () => {

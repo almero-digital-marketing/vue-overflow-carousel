@@ -39,7 +39,7 @@
                 <div class="item" :style="{
                     '--item-width': item.width,
                     '--item-height': item.height
-                }"></div>
+                }" v-drag-click="() => onClick(index)"></div>
             </slide>
         </carousel>
     </div>
@@ -89,6 +89,11 @@ defineExpose({
         overflowCarousel.value.goTo(index, force)
     }
 })
+
+function onClick(index) {
+    const segments = component.value.getElementsByClassName('segment')
+    segments[index].click()
+}
 
 function onProgress(progress) {
     const minRotation = info.value[0].rotation
